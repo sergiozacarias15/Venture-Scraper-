@@ -1,7 +1,13 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", "Avenir Next", "Segoe UI", sans-serif;
+  --font-sans: "Open Sans", "Segoe UI", sans-serif;
+  --font-display: "Teko", "Arial Narrow", sans-serif;
+  --color-brand-navy: #150a56;
+  --color-brand-ink: #0c120f;
+  --color-brand-yellow: #fcec62;
+  --color-brand-orange: #ffbc7d;
+  --color-brand-surface: #f3f3f3;
 }
 
 * {
@@ -17,7 +23,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  color: #0f172a;
+  color: #0c120f;
   background: #f8fafc;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -36,8 +42,8 @@ select {
 }
 
 ::selection {
-  color: #082f49;
-  background: #a5f3fc;
+  color: #150a56;
+  background: #fcec62;
 }
 
 :focus-visible {

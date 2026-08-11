@@ -81,7 +81,7 @@ function Field({
   return (
     <label className="grid gap-2 text-sm font-semibold text-slate-800">
       <span>
-        {label} {!optional && <span className="text-cyan-700">*</span>}
+        {label} {!optional && <span className="text-[#150A56]">*</span>}
         {optional && <span className="ml-1 font-normal text-slate-400">({optional})</span>}
       </span>
       {children}
@@ -107,7 +107,7 @@ function FormSection({
   return (
     <section>
       <div className="mb-7 border-b border-slate-200 pb-5">
-        <h2 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">{title}</h2>
+        <h2 className="font-display text-3xl font-semibold tracking-wide text-[#150A56] uppercase sm:text-4xl">{title}</h2>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">{description}</p>
       </div>
       {children}
@@ -133,7 +133,7 @@ function CheckboxField({
       >
         <input
           type="checkbox"
-          className="mt-0.5 size-5 shrink-0 accent-cyan-600"
+          className="mt-0.5 size-5 shrink-0 accent-[#150A56]"
           {...registration}
         />
         <span className="text-slate-700">{label}</span>
@@ -214,7 +214,7 @@ export function AssessmentForm() {
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
       <div className="mb-8" aria-label={t("progress.label", { current: step + 1, total: 4 })}>
         <div className="mb-3 flex items-center justify-between">
-          <span className="text-xs font-bold tracking-wide text-cyan-700 uppercase">
+          <span className="text-xs font-bold tracking-wide text-[#150A56] uppercase">
             {t("progress.label", { current: step + 1, total: 4 })}
           </span>
           <span className="text-xs font-semibold text-slate-500">
@@ -229,7 +229,7 @@ export function AssessmentForm() {
           className="h-2 overflow-hidden rounded-full bg-slate-100"
         >
           <div
-            className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 transition-all duration-500"
+            className="h-full rounded-full bg-[#150A56] transition-all duration-500"
             style={{ width: `${((step + 1) / 4) * 100}%` }}
           />
         </div>
@@ -438,8 +438,8 @@ export function AssessmentForm() {
           </div>
 
           {isMinor && (
-            <div className="mt-8 rounded-2xl border border-cyan-200 bg-cyan-50/70 p-5 sm:p-6">
-              <h3 className="text-lg font-bold text-slate-950">{t("sections.guardianTitle")}</h3>
+            <div className="mt-8 rounded-2xl border border-[#150A56]/20 bg-[#FCEC62]/15 p-5 sm:p-6">
+              <h3 className="font-display text-2xl font-semibold tracking-wide text-[#150A56] uppercase">{t("sections.guardianTitle")}</h3>
               <p className="mt-1 text-sm leading-relaxed text-slate-600">{t("sections.guardianDescription")}</p>
               <div className="mt-5 grid gap-5 sm:grid-cols-2">
                 <Field label={t("fields.guardianName")} error={errors.guardianName?.message}>
@@ -471,7 +471,7 @@ export function AssessmentForm() {
           )}
 
           <div className="mt-8">
-            <h3 className="mb-4 text-lg font-bold text-slate-950">{t("sections.consentTitle")}</h3>
+            <h3 className="font-display mb-4 text-2xl font-semibold tracking-wide text-[#150A56] uppercase">{t("sections.consentTitle")}</h3>
             <div className="grid gap-3">
               <CheckboxField
                 label={
@@ -480,7 +480,7 @@ export function AssessmentForm() {
                     <a
                       href="/privacy"
                       target="_blank"
-                      className="font-semibold text-cyan-700 underline underline-offset-2 hover:text-cyan-900"
+                      className="font-semibold text-[#150A56] underline underline-offset-2 hover:text-[#0C120F]"
                     >
                       {t("privacy.link")}
                     </a>
