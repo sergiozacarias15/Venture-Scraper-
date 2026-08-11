@@ -3,13 +3,14 @@ import { ZodError } from "zod";
 import { assessmentRequestSchema } from "../server/assessment-schema";
 import { buildAssessmentNote } from "../server/assessment-note";
 import {
-  assertConfiguredStage,
   createDeal,
   createDealNote,
   findDuplicateDeal,
   findOrCreatePerson,
   getPipedriveConfig,
+  PipedriveConfigurationError,
   PipedriveError,
+  resolveStageId,
   rollbackDeal,
 } from "../server/pipedrive";
 import {
@@ -75,13 +76,13 @@ export default async function submitAssessment(request: ApiRequest, response: Ap
     enforceSpamAndRateLimits(request, payload);
 
     const config = getPipedriveConfig();
-    await assertConfiguredStage(config);
+    const stageId = await resolveStageId(config);
 
     const person = await findOrCreatePerson(config, payload.answers);
     const dealTitle = `${payload.answers.fullName} - College Volleyball Application`;
     if (await findDuplicateDeal(config, dealTitle, person.id)) throw new DuplicateSubmissionError();
 
-    const deal = await createDeal(config, dealTitle, person.id);
+    const deal = await createDeal(config, dealTitle, person.id, stageId);
     const submittedAt = new Date().toISOString();
     const note = buildAssessmentNote(
       payload.answers,
@@ -109,6 +110,13 @@ export default async function submitAssessment(request: ApiRequest, response: Ap
     if (error instanceof RangeError) return sendError(response, 413, "payload_too_large");
     if (error instanceof RequestSecurityError) return sendError(response, error.status, error.code);
     if (error instanceof DuplicateSubmissionError) return sendError(response, 409, "duplicate");
+    if (error instanceof PipedriveConfigurationError) {
+      return response.status(500).json({
+        success: false,
+        code: "configuration_error",
+        message: error.message,
+      });
+    }
     if (error instanceof PipedriveError && error.status === 409) return sendError(response, 409, "contact_conflict");
     return sendError(response, 502, "submission_failed");
   }

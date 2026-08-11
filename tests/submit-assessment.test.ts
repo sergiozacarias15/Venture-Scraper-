@@ -1,5 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import submitAssessment from "../api/submit-assessment";
+import {
+  getPipedriveConfig,
+  PipedriveConfigurationError,
+  resetStageCacheForTests,
+  resolveStageId,
+} from "../server/pipedrive";
 import { resetSecurityStateForTests } from "../server/request-security";
 
 const answers = {
@@ -98,6 +104,7 @@ const jsonResponse = (data: unknown, status = 200) =>
 describe("POST /api/submit-assessment", () => {
   beforeEach(() => {
     resetSecurityStateForTests();
+    resetStageCacheForTests();
     vi.restoreAllMocks();
     process.env.PIPEDRIVE_API_TOKEN = "test-token-never-sent-to-production";
     process.env.PIPEDRIVE_COMPANY_DOMAIN = "test-company";
@@ -249,5 +256,54 @@ describe("POST /api/submit-assessment", () => {
     expect(res.statusCode).toBe(502);
     expect(res.body).toEqual({ success: false, code: "submission_failed" });
     expect(methods.some((call) => call.startsWith("DELETE ") && call.endsWith("/api/v2/deals/901"))).toBe(true);
+  });
+});
+
+describe("automatic Pipedrive stage resolution", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    resetStageCacheForTests();
+    process.env.PIPEDRIVE_API_TOKEN = "test-token-never-sent-to-production";
+    process.env.PIPEDRIVE_COMPANY_DOMAIN = "test-company";
+    process.env.PIPEDRIVE_OWNER_ID = "42";
+    process.env.PIPEDRIVE_PIPELINE_ID = "2";
+    delete process.env.PIPEDRIVE_STAGE_ID;
+  });
+
+  it("finds the exact stage in pipeline 2 and caches its numeric ID", async () => {
+    const fetchMock = vi.fn(async () =>
+      jsonResponse({
+        success: true,
+        data: [
+          { id: 6, name: "CONTACTED", pipeline_id: 2, is_deleted: false },
+          { id: 7, name: "NEW PLAYER (LEAD)", pipeline_id: 2, is_deleted: false },
+          { id: 8, name: "NEW PLAYER (LEAD)", pipeline_id: 3, is_deleted: false },
+        ],
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const config = getPipedriveConfig();
+
+    await expect(resolveStageId(config)).resolves.toBe(7);
+    await expect(resolveStageId(config)).resolves.toBe(7);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(String(fetchMock.mock.calls[0][0])).toContain("/api/v2/stages?pipeline_id=2");
+  });
+
+  it("returns a clear configuration error when the exact stage is missing", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        jsonResponse({
+          success: true,
+          data: [{ id: 6, name: "New Player (Lead)", pipeline_id: 2, is_deleted: false }],
+        }),
+      ),
+    );
+
+    await expect(resolveStageId(getPipedriveConfig())).rejects.toEqual(
+      new PipedriveConfigurationError("No stage named exactly NEW PLAYER (LEAD) was found in pipeline 2."),
+    );
   });
 });

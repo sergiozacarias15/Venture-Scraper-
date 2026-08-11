@@ -9,12 +9,18 @@ export class PipedriveError extends Error {
   }
 }
 
+export class PipedriveConfigurationError extends PipedriveError {
+  constructor(message: string) {
+    super(message, 500);
+  }
+}
+
 interface PipedriveConfig {
   baseUrl: string;
   token: string;
   ownerId: number;
   pipelineId: number;
-  stageId: number;
+  stageId?: number;
 }
 
 interface SearchItem {
@@ -57,12 +63,13 @@ export function getPipedriveConfig(): PipedriveConfig {
   const pipelineId = positiveInteger(process.env.PIPEDRIVE_PIPELINE_ID, "PIPEDRIVE_PIPELINE_ID");
   if (pipelineId !== 2) throw new PipedriveError("Pipedrive pipeline must be ID 2", 500);
 
+  const configuredStage = process.env.PIPEDRIVE_STAGE_ID?.trim();
   return {
     baseUrl: `https://${companyDomain}.pipedrive.com`,
     token,
     ownerId: positiveInteger(process.env.PIPEDRIVE_OWNER_ID, "PIPEDRIVE_OWNER_ID"),
     pipelineId,
-    stageId: positiveInteger(process.env.PIPEDRIVE_STAGE_ID, "PIPEDRIVE_STAGE_ID"),
+    stageId: configuredStage ? positiveInteger(configuredStage, "PIPEDRIVE_STAGE_ID") : undefined,
   };
 }
 
@@ -133,15 +140,61 @@ export async function findOrCreatePerson(config: PipedriveConfig, answers: Asses
   return { id: person.id, created: true };
 }
 
-export async function assertConfiguredStage(config: PipedriveConfig) {
-  const stage = await request<{ id: number; name: string; pipeline_id?: number; pipeline?: { id: number } }>(
-    config,
-    `/stages/${config.stageId}`,
-  );
+interface Stage {
+  id: number;
+  name: string;
+  pipeline_id?: number;
+  pipeline?: { id: number };
+  is_deleted?: boolean;
+}
+
+const stageCache = new Map<string, { id: number; expiresAt: number }>();
+const STAGE_CACHE_TTL_MS = 30 * 60 * 1_000;
+
+const isTargetStage = (stage: Stage, config: PipedriveConfig) => {
   const pipelineId = stage.pipeline_id ?? stage.pipeline?.id;
-  if (stage.id !== config.stageId || pipelineId !== config.pipelineId || stage.name.trim().toUpperCase() !== "NEW PLAYER (LEAD)") {
-    throw new PipedriveError("Configured Pipedrive stage does not match NEW PLAYER (LEAD) in pipeline 2", 500);
+  return (
+    stage.name === "NEW PLAYER (LEAD)" &&
+    pipelineId === config.pipelineId &&
+    stage.is_deleted !== true
+  );
+};
+
+export async function resolveStageId(config: PipedriveConfig) {
+  const cacheKey = `${config.baseUrl}:${config.pipelineId}:${config.stageId ?? "auto"}`;
+  const cached = stageCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) return cached.id;
+
+  let stageId: number;
+  if (config.stageId) {
+    const stage = await request<Stage>(config, `/stages/${config.stageId}`);
+    if (stage.id !== config.stageId || !isTargetStage(stage, config)) {
+      throw new PipedriveConfigurationError(
+        "PIPEDRIVE_STAGE_ID must identify the stage named exactly NEW PLAYER (LEAD) in pipeline 2.",
+      );
+    }
+    stageId = stage.id;
+  } else {
+    const parameters = new URLSearchParams({
+      pipeline_id: String(config.pipelineId),
+      limit: "500",
+      sort_by: "id",
+      sort_direction: "asc",
+    });
+    const stages = await request<Stage[]>(config, `/stages?${parameters.toString()}`);
+    const matches = stages.filter((stage) => isTargetStage(stage, config));
+    if (matches.length !== 1) {
+      throw new PipedriveConfigurationError(
+        matches.length === 0
+          ? "No stage named exactly NEW PLAYER (LEAD) was found in pipeline 2."
+          : "Multiple stages named exactly NEW PLAYER (LEAD) were found in pipeline 2.",
+      );
+    }
+    stageId = matches[0].id;
   }
+
+  stageCache.set(cacheKey, { id: stageId, expiresAt: Date.now() + STAGE_CACHE_TTL_MS });
+  return stageId;
 }
 
 export async function findDuplicateDeal(config: PipedriveConfig, title: string, personId: number) {
@@ -157,7 +210,7 @@ export async function findDuplicateDeal(config: PipedriveConfig, title: string, 
   return (data.items ?? []).some(({ item }) => item.title?.toLowerCase() === title.toLowerCase());
 }
 
-export async function createDeal(config: PipedriveConfig, title: string, personId: number) {
+export async function createDeal(config: PipedriveConfig, title: string, personId: number, stageId: number) {
   return request<{ id: number }>(config, "/deals", {
     method: "POST",
     body: {
@@ -165,7 +218,7 @@ export async function createDeal(config: PipedriveConfig, title: string, personI
       owner_id: config.ownerId,
       person_id: personId,
       pipeline_id: config.pipelineId,
-      stage_id: config.stageId,
+      stage_id: stageId,
       value: 4495,
       currency: "USD",
       status: "open",
@@ -197,6 +250,10 @@ export async function rollbackDeal(config: PipedriveConfig, dealId: number) {
   } catch {
     // The original submission still fails; the existing deal prevents a duplicate on retry.
   }
+}
+
+export function resetStageCacheForTests() {
+  stageCache.clear();
 }
 
 export type { PipedriveConfig };

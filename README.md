@@ -35,10 +35,11 @@ PIPEDRIVE_API_TOKEN=your_server_only_api_token
 PIPEDRIVE_COMPANY_DOMAIN=your_company_subdomain
 PIPEDRIVE_OWNER_ID=the_numeric_user_id_for_sergio_zacarias
 PIPEDRIVE_PIPELINE_ID=2
-PIPEDRIVE_STAGE_ID=the_numeric_id_for_NEW_PLAYER_LEAD
 ```
 
-Do not prefix any of these variables with `VITE_`. Set them for Production (and Preview only if you intentionally want preview submissions connected to a non-production test account). The endpoint rejects a stage unless its Pipedrive name is exactly `NEW PLAYER (LEAD)` and it belongs to pipeline ID `2`.
+`PIPEDRIVE_STAGE_ID` is optional. When supplied, it must identify the stage named exactly `NEW PLAYER (LEAD)` in pipeline `2`. When omitted, the endpoint securely fetches the stages in pipeline `2`, resolves that exact name, and caches its numeric ID for 30 minutes on warm serverless instances. A missing or ambiguous match returns a configuration error before any Person or Deal is created.
+
+Do not prefix any variable with `VITE_`. Set credentials for Production (and Preview only if you intentionally want preview submissions connected to a non-production test account).
 
 The endpoint includes strict Zod validation, same-origin enforcement, a honeypot and minimum-completion-time check, request-size limits, per-IP in-memory throttling, client idempotency, durable Pipedrive deal duplicate checks, escaped HTML notes, API timeouts, and deal rollback when note creation fails.
 
