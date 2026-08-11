@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Open Sans", "Segoe UI", sans-serif;
+  --font-display: "Teko", "Arial Narrow", sans-serif;
+  --color-brand-navy: #150a56;
+  --color-brand-ink: #0c120f;
+  --color-brand-yellow: #fcec62;
+  --color-brand-orange: #ffbc7d;
+  --color-brand-surface: #f3f3f3;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  background: #f8fafc;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  color: #0c120f;
+  background: #f8fafc;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+select {
+  touch-action: manipulation;
+}
+
+::selection {
+  color: #150a56;
+  background: #fcec62;
+}
+
+:focus-visible {
+  outline-offset: 2px;
+}
+
+.volleyball-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 42px 42px;
+  transform: perspective(500px) rotateY(-8deg) skewY(-4deg) scale(1.15);
+  transform-origin: right center;
+  mask-image: linear-gradient(to left, black, transparent);
+}
+
+.form-step-enter {
+  animation: form-step-enter 320ms ease-out both;
+}
+
+@keyframes form-step-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

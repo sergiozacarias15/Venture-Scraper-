@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/sergiozacarias",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/sergiozacarias/confirmation",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/privacy",
+      "destination": "/index.html"
+    }
+  ]
+}

@@ -1,0 +1,176 @@
+{
+  "brand": "Venture Sports USA",
+  "language": "Language",
+  "hero": {
+    "eyebrow": "International volleyball recruiting",
+    "title": "Your U.S. college volleyball journey starts here.",
+    "description": "Complete this assessment so our team can evaluate your athletic and academic profile.",
+    "trust": "Secure assessment · About 8 minutes · No commitment"
+  },
+  "advisor": {
+    "name": "Sergio Zacarias",
+    "role": "International Recruiting Advisor",
+    "company": "Venture Sports USA"
+  },
+  "progress": {
+    "label": "Step {{current}} of {{total}}",
+    "athlete": "Athlete",
+    "volleyball": "Volleyball",
+    "academics": "Academics",
+    "goals": "Goals & consent"
+  },
+  "common": {
+    "requiredHint": "Fields marked * are required.",
+    "select": "Select an option",
+    "optional": "Optional",
+    "continue": "Continue",
+    "back": "Back",
+    "submit": "Send my assessment",
+    "submitting": "Sending securely…",
+    "yes": "Yes",
+    "no": "No",
+    "notApplicable": "Not applicable"
+  },
+  "sections": {
+    "athleteTitle": "Tell us about the athlete",
+    "athleteDescription": "Use the athlete’s legal information and best contact details.",
+    "volleyballTitle": "Volleyball profile",
+    "volleyballDescription": "Help us understand your playing background and current level.",
+    "academicsTitle": "Academics and video",
+    "academicsDescription": "U.S. opportunities depend on both athletic and academic fit.",
+    "goalsTitle": "Your plans and priorities",
+    "goalsDescription": "A few final details help us provide the right guidance.",
+    "guardianTitle": "Parent or guardian details",
+    "guardianDescription": "Because the athlete is under 18, these fields and guardian consent are required.",
+    "consentTitle": "Privacy and contact consent"
+  },
+  "fields": {
+    "fullName": "Athlete’s full name",
+    "birthDate": "Date of birth",
+    "nationality": "Nationality",
+    "residenceCountry": "Country of residence",
+    "cityCountry": "City and country",
+    "email": "Athlete’s email",
+    "whatsapp": "WhatsApp number with country code",
+    "whatsappPlaceholder": "+39 333 123 4567",
+    "height": "Height",
+    "heightPlaceholder": "e.g. 183 cm",
+    "dominantHand": "Dominant hand",
+    "primaryPosition": "Primary position",
+    "secondaryPosition": "Secondary position",
+    "currentClub": "Current club",
+    "currentCategory": "Current league/category",
+    "experienceYears": "Years of volleyball experience",
+    "highestLevel": "Highest level reached",
+    "representativeExperience": "Regional or national-team experience",
+    "representativePlaceholder": "Team, age group, year and competition",
+    "achievements": "Awards and achievements",
+    "achievementsPlaceholder": "Individual awards, titles, selections or statistics",
+    "coachName": "Coach’s name",
+    "coachContact": "Coach’s contact information",
+    "coachContactPlaceholder": "Email and/or phone with country code",
+    "schoolName": "School name",
+    "academicAverage": "Academic average / GPA",
+    "academicAveragePlaceholder": "Include the grading scale, e.g. 8.5/10",
+    "graduationYear": "Expected graduation year",
+    "englishLevel": "English level",
+    "intendedMajor": "Intended university major",
+    "highlightVideo": "Highlight-video link",
+    "fullMatchVideo": "Full-match video link",
+    "profileLink": "Instagram or player-profile link",
+    "startYear": "Preferred U.S. university start year",
+    "annualBudget": "Approximate annual family budget for university",
+    "annualBudgetHelp": "Include tuition, housing and meals. Choose the closest range in USD.",
+    "mainGoal": "Main goal in the United States",
+    "concern": "Biggest concern about the recruiting process",
+    "marketingSource": "How did you hear about us?",
+    "guardianName": "Parent or guardian’s full name",
+    "guardianEmail": "Parent or guardian’s email",
+    "guardianWhatsapp": "Parent or guardian’s WhatsApp number",
+    "guardianConsent": "I confirm that I am the athlete’s parent/legal guardian and authorize this assessment.",
+    "privacyConsent": "I have read the privacy notice and consent to Venture Sports USA processing this information to assess recruiting opportunities.",
+    "contactConsent": "I agree that Venture Sports USA may contact the athlete and, when applicable, the guardian by email, phone or WhatsApp about this assessment."
+  },
+  "options": {
+    "hand": { "right": "Right", "left": "Left", "both": "Both" },
+    "position": {
+      "setter": "Setter",
+      "outside": "Outside hitter",
+      "opposite": "Opposite hitter",
+      "middle": "Middle blocker",
+      "libero": "Libero",
+      "defensive": "Defensive specialist"
+    },
+    "english": {
+      "beginner": "Beginner",
+      "elementary": "Elementary",
+      "intermediate": "Intermediate",
+      "upperIntermediate": "Upper intermediate",
+      "advanced": "Advanced / fluent",
+      "native": "Native or bilingual"
+    },
+    "budget": {
+      "under10": "Under $10,000 USD",
+      "10to20": "$10,000–$20,000 USD",
+      "20to30": "$20,000–$30,000 USD",
+      "30to40": "$30,000–$40,000 USD",
+      "over40": "Over $40,000 USD",
+      "unsure": "Not sure yet"
+    },
+    "goal": {
+      "scholarship": "Earn an athletic scholarship",
+      "academic": "Combine high-level academics and volleyball",
+      "professional": "Develop toward professional volleyball",
+      "experience": "Gain an international college experience",
+      "other": "Other"
+    },
+    "source": {
+      "instagram": "Instagram",
+      "whatsapp": "WhatsApp",
+      "friend": "Friend, teammate or family",
+      "coach": "Coach or club",
+      "search": "Google or web search",
+      "event": "Tournament or event",
+      "other": "Other"
+    }
+  },
+  "validation": {
+    "required": "This field is required.",
+    "email": "Enter a valid email address.",
+    "phone": "Include a valid country code and phone number.",
+    "url": "Enter a valid link beginning with http:// or https://.",
+    "birthDate": "Enter a valid date of birth.",
+    "futureDate": "The date of birth cannot be in the future.",
+    "guardian": "Parent or guardian information is required for athletes under 18.",
+    "consent": "You must agree before submitting."
+  },
+  "notifications": {
+    "saved": "Your assessment was saved.",
+    "error": "We could not save your assessment. Please try again.",
+    "stepError": "Please review the highlighted fields.",
+    "duplicate": "An application with these contact details has already been submitted.",
+    "rateLimited": "Too many attempts. Please wait and try again later.",
+    "invalidSubmission": "Some information could not be validated. Please review your answers."
+  },
+  "confirmation": {
+    "eyebrow": "Assessment received",
+    "title": "Thank you, {{name}}!",
+    "message": "Venture Sports USA will review your volleyball and academic profile. If your profile qualifies for the next step, our team will contact you within 2–3 business days.",
+    "reference": "Your reference",
+    "next": "What happens next?",
+    "step1": "Our recruiting team reviews your profile and videos.",
+    "step2": "We assess your academic and athletic fit for U.S. universities.",
+    "step3": "Qualified athletes are contacted to discuss next steps.",
+    "return": "Submit another assessment"
+  },
+  "privacy": {
+    "link": "Privacy notice",
+    "title": "Privacy notice",
+    "body": "The information submitted through this assessment is used by Venture Sports USA to evaluate potential university recruiting opportunities and communicate with the athlete or guardian. Do not submit sensitive information that is not requested. It is stored in Venture Sports USA’s CRM and must be retained or deleted in accordance with the organization’s formal privacy policy and applicable law.",
+    "back": "Back to assessment"
+  },
+  "footer": {
+    "secure": "Your information is handled securely.",
+    "copyright": "© {{year}} Venture Sports USA"
+  }
+}

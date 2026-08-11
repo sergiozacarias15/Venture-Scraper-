@@ -1,0 +1,176 @@
+{
+  "brand": "Venture Sports USA",
+  "language": "Sprache",
+  "hero": {
+    "eyebrow": "Internationale Volleyball-Rekrutierung",
+    "title": "Dein Weg zum College-Volleyball in den USA beginnt hier.",
+    "description": "Fülle diese Beurteilung aus, damit unser Team dein sportliches und schulisches Profil prüfen kann.",
+    "trust": "Sichere Beurteilung · Etwa 8 Minuten · Unverbindlich"
+  },
+  "advisor": {
+    "name": "Sergio Zacarias",
+    "role": "Berater für internationale Rekrutierung",
+    "company": "Venture Sports USA"
+  },
+  "progress": {
+    "label": "Schritt {{current}} von {{total}}",
+    "athlete": "Athlet",
+    "volleyball": "Volleyball",
+    "academics": "Schulbildung",
+    "goals": "Ziele und Einwilligung"
+  },
+  "common": {
+    "requiredHint": "Mit * gekennzeichnete Felder sind Pflichtfelder.",
+    "select": "Option auswählen",
+    "optional": "Optional",
+    "continue": "Weiter",
+    "back": "Zurück",
+    "submit": "Meine Beurteilung absenden",
+    "submitting": "Wird sicher gesendet…",
+    "yes": "Ja",
+    "no": "Nein",
+    "notApplicable": "Nicht zutreffend"
+  },
+  "sections": {
+    "athleteTitle": "Erzähl uns etwas über den Athleten",
+    "athleteDescription": "Verwende die amtlichen Daten des Athleten und die besten Kontaktdaten.",
+    "volleyballTitle": "Volleyballprofil",
+    "volleyballDescription": "Hilf uns, deinen sportlichen Werdegang und dein aktuelles Spielniveau zu verstehen.",
+    "academicsTitle": "Schulbildung und Videos",
+    "academicsDescription": "Die Möglichkeiten in den USA hängen sowohl von der sportlichen als auch von der schulischen Eignung ab.",
+    "goalsTitle": "Deine Pläne und Prioritäten",
+    "goalsDescription": "Einige abschließende Angaben helfen uns, dich passend zu beraten.",
+    "guardianTitle": "Angaben zu einem Elternteil oder Erziehungsberechtigten",
+    "guardianDescription": "Da der Athlet unter 18 Jahre alt ist, sind diese Felder und die Einwilligung eines Erziehungsberechtigten erforderlich.",
+    "consentTitle": "Einwilligung zu Datenschutz und Kontaktaufnahme"
+  },
+  "fields": {
+    "fullName": "Vollständiger Name des Athleten",
+    "birthDate": "Geburtsdatum",
+    "nationality": "Staatsangehörigkeit",
+    "residenceCountry": "Wohnsitzland",
+    "cityCountry": "Stadt und Land",
+    "email": "E-Mail-Adresse des Athleten",
+    "whatsapp": "WhatsApp-Nummer mit Ländervorwahl",
+    "whatsappPlaceholder": "+39 333 123 4567",
+    "height": "Körpergröße",
+    "heightPlaceholder": "z. B. 183 cm",
+    "dominantHand": "Dominante Hand",
+    "primaryPosition": "Hauptposition",
+    "secondaryPosition": "Nebenposition",
+    "currentClub": "Aktueller Verein",
+    "currentCategory": "Aktuelle Liga/Kategorie",
+    "experienceYears": "Jahre Volleyballerfahrung",
+    "highestLevel": "Höchstes erreichtes Niveau",
+    "representativeExperience": "Erfahrung in Regional- oder Nationalmannschaften",
+    "representativePlaceholder": "Mannschaft, Altersklasse, Jahr und Wettbewerb",
+    "achievements": "Auszeichnungen und Erfolge",
+    "achievementsPlaceholder": "Einzelauszeichnungen, Titel, Nominierungen oder Statistiken",
+    "coachName": "Name des Trainers",
+    "coachContact": "Kontaktdaten des Trainers",
+    "coachContactPlaceholder": "E-Mail und/oder Telefonnummer mit Ländervorwahl",
+    "schoolName": "Name der Schule",
+    "academicAverage": "Notendurchschnitt / GPA",
+    "academicAveragePlaceholder": "Bewertungsskala angeben, z. B. 8,5/10",
+    "graduationYear": "Voraussichtliches Abschlussjahr",
+    "englishLevel": "Englischkenntnisse",
+    "intendedMajor": "Angestrebtes Studienfach",
+    "highlightVideo": "Link zum Highlight-Video",
+    "fullMatchVideo": "Link zum Video eines vollständigen Spiels",
+    "profileLink": "Link zu Instagram oder zum Spielerprofil",
+    "startYear": "Bevorzugtes Jahr für den Studienbeginn in den USA",
+    "annualBudget": "Ungefähres jährliches Familienbudget für das Studium",
+    "annualBudgetHelp": "Studiengebühren, Unterkunft und Verpflegung einbeziehen. Wähle die nächstliegende Spanne in USD.",
+    "mainGoal": "Hauptziel in den Vereinigten Staaten",
+    "concern": "Größte Sorge beim Rekrutierungsverfahren",
+    "marketingSource": "Wie bist du auf uns aufmerksam geworden?",
+    "guardianName": "Vollständiger Name eines Elternteils oder Erziehungsberechtigten",
+    "guardianEmail": "E-Mail-Adresse eines Elternteils oder Erziehungsberechtigten",
+    "guardianWhatsapp": "WhatsApp-Nummer eines Elternteils oder Erziehungsberechtigten",
+    "guardianConsent": "Ich bestätige, dass ich ein Elternteil oder der gesetzliche Vertreter des Athleten bin, und genehmige diese Beurteilung.",
+    "privacyConsent": "Ich habe den Datenschutzhinweis gelesen und willige ein, dass Venture Sports USA diese Angaben zur Prüfung von Rekrutierungsmöglichkeiten verarbeitet.",
+    "contactConsent": "Ich bin damit einverstanden, dass Venture Sports USA den Athleten und gegebenenfalls den Erziehungsberechtigten per E-Mail, Telefon oder WhatsApp zu dieser Beurteilung kontaktiert."
+  },
+  "options": {
+    "hand": { "right": "Rechts", "left": "Links", "both": "Beide" },
+    "position": {
+      "setter": "Zuspieler/in",
+      "outside": "Außenangreifer/in",
+      "opposite": "Diagonalangreifer/in",
+      "middle": "Mittelblocker/in",
+      "libero": "Libero/Libera",
+      "defensive": "Abwehrspezialist/in"
+    },
+    "english": {
+      "beginner": "Anfänger",
+      "elementary": "Grundkenntnisse",
+      "intermediate": "Mittelstufe",
+      "upperIntermediate": "Gute Mittelstufe",
+      "advanced": "Fortgeschritten / fließend",
+      "native": "Muttersprachlich oder zweisprachig"
+    },
+    "budget": {
+      "under10": "Unter 10.000 USD",
+      "10to20": "10.000–20.000 USD",
+      "20to30": "20.000–30.000 USD",
+      "30to40": "30.000–40.000 USD",
+      "over40": "Über 40.000 USD",
+      "unsure": "Noch nicht sicher"
+    },
+    "goal": {
+      "scholarship": "Ein Sportstipendium erhalten",
+      "academic": "Hochwertige akademische Ausbildung und Volleyball verbinden",
+      "professional": "Mich in Richtung professioneller Volleyball weiterentwickeln",
+      "experience": "Internationale College-Erfahrung sammeln",
+      "other": "Sonstiges"
+    },
+    "source": {
+      "instagram": "Instagram",
+      "whatsapp": "WhatsApp",
+      "friend": "Freund, Teamkollege oder Familie",
+      "coach": "Trainer oder Verein",
+      "search": "Google oder Websuche",
+      "event": "Turnier oder Veranstaltung",
+      "other": "Sonstiges"
+    }
+  },
+  "validation": {
+    "required": "Dieses Feld ist erforderlich.",
+    "email": "Gib eine gültige E-Mail-Adresse ein.",
+    "phone": "Gib eine gültige Ländervorwahl und Telefonnummer an.",
+    "url": "Gib einen gültigen Link ein, der mit http:// oder https:// beginnt.",
+    "birthDate": "Gib ein gültiges Geburtsdatum ein.",
+    "futureDate": "Das Geburtsdatum darf nicht in der Zukunft liegen.",
+    "guardian": "Für Athleten unter 18 Jahren sind Angaben zu einem Elternteil oder Erziehungsberechtigten erforderlich.",
+    "consent": "Vor dem Absenden musst du zustimmen."
+  },
+  "notifications": {
+    "saved": "Deine Beurteilung wurde gespeichert.",
+    "error": "Deine Beurteilung konnte nicht gespeichert werden. Bitte versuche es erneut.",
+    "stepError": "Bitte überprüfe die hervorgehobenen Felder.",
+    "duplicate": "Mit diesen Kontaktdaten wurde bereits eine Bewerbung eingereicht.",
+    "rateLimited": "Zu viele Versuche. Bitte warte und versuche es später erneut.",
+    "invalidSubmission": "Einige Angaben konnten nicht validiert werden. Bitte überprüfe deine Antworten."
+  },
+  "confirmation": {
+    "eyebrow": "Beurteilung eingegangen",
+    "title": "Vielen Dank, {{name}}!",
+    "message": "Venture Sports USA prüft dein sportliches und schulisches Profil. Wenn dein Profil die Voraussetzungen für den nächsten Schritt erfüllt, wird sich unser Team innerhalb von 2–3 Werktagen bei dir melden.",
+    "reference": "Deine Referenznummer",
+    "next": "Wie geht es weiter?",
+    "step1": "Unser Rekrutierungsteam prüft dein Profil und deine Videos.",
+    "step2": "Wir beurteilen deine schulische und sportliche Eignung für US-amerikanische Hochschulen.",
+    "step3": "Geeignete Athleten werden kontaktiert, um die nächsten Schritte zu besprechen.",
+    "return": "Weitere Beurteilung einreichen"
+  },
+  "privacy": {
+    "link": "Datenschutzhinweis",
+    "title": "Datenschutzhinweis",
+    "body": "Venture Sports USA verwendet die mit dieser Beurteilung übermittelten Angaben, um mögliche Rekrutierungschancen an Hochschulen zu prüfen und mit dem Athleten oder Erziehungsberechtigten zu kommunizieren. Übermittle keine sensiblen Angaben, nach denen nicht gefragt wurde. Die Daten werden im CRM von Venture Sports USA gespeichert und müssen gemäß der offiziellen Datenschutzrichtlinie der Organisation und dem geltenden Recht aufbewahrt oder gelöscht werden.",
+    "back": "Zurück zur Beurteilung"
+  },
+  "footer": {
+    "secure": "Deine Angaben werden sicher verarbeitet.",
+    "copyright": "© {{year}} Venture Sports USA"
+  }
+}
