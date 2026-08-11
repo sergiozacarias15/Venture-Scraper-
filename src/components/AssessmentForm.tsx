@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeft,
@@ -178,9 +178,9 @@ export function AssessmentForm() {
       return defaultValues;
     }
   }, []);
-  const formStartedAt = useRef(Date.now());
-  const clientSubmissionId = useRef(crypto.randomUUID());
-  const honeypot = useRef<HTMLInputElement>(null);
+  const [formStartedAt] = useState(() => Date.now());
+  const [clientSubmissionId] = useState(() => crypto.randomUUID());
+  const [website, setWebsite] = useState("");
   const {
     register,
     handleSubmit,
@@ -229,9 +229,9 @@ export function AssessmentForm() {
       context: {
         language,
         sourceRoute: window.location.pathname,
-        formStartedAt: formStartedAt.current,
-        clientSubmissionId: clientSubmissionId.current,
-        website: honeypot.current?.value ?? "",
+        formStartedAt,
+        clientSubmissionId,
+        website,
       },
     };
 
@@ -259,9 +259,10 @@ export function AssessmentForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
       <input
-        ref={honeypot}
         type="text"
         name="website"
+        value={website}
+        onChange={(event) => setWebsite(event.target.value)}
         tabIndex={-1}
         autoComplete="off"
         aria-hidden="true"
