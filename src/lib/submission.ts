@@ -1,38 +1,28 @@
-import { createClient } from "@supabase/supabase-js";
-import type { AssessmentSubmission } from "./assessment";
+import type { AssessmentSubmissionRequest } from "./assessment";
 
 export interface SubmissionResult {
   id: string;
 }
 
-const STORAGE_KEY = "venture-volleyball-mock-submissions";
-
-async function submitToMock(payload: AssessmentSubmission): Promise<SubmissionResult> {
-  await new Promise((resolve) => window.setTimeout(resolve, 900));
-  const id = `VB-${Date.now().toString(36).toUpperCase()}`;
-  const previous = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]") as unknown[];
-  localStorage.setItem(STORAGE_KEY, JSON.stringify([...previous, { id, ...payload }]));
-  return { id };
+export class SubmissionError extends Error {
+  constructor(public readonly code: string) {
+    super(code);
+  }
 }
 
-async function submitToSupabase(payload: AssessmentSubmission): Promise<SubmissionResult> {
-  const url = import.meta.env.VITE_SUPABASE_URL;
-  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-  if (!url || !anonKey) throw new Error("Supabase environment variables are missing.");
+export async function submitAssessment(payload: AssessmentSubmissionRequest): Promise<SubmissionResult> {
+  const response = await fetch("/api/submit-assessment", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const result = (await response.json().catch(() => null)) as
+    | { success: true; reference: string }
+    | { success: false; code: string }
+    | null;
 
-  const supabase = createClient(url, anonKey);
-  const { data, error } = await supabase
-    .from("volleyball_assessments")
-    .insert({ payload, ...payload.metadata })
-    .select("id")
-    .single();
-
-  if (error) throw error;
-  return { id: String(data.id) };
-}
-
-export function submitAssessment(payload: AssessmentSubmission) {
-  return import.meta.env.VITE_SUBMISSION_MODE === "supabase"
-    ? submitToSupabase(payload)
-    : submitToMock(payload);
+  if (!response.ok || !result?.success) {
+    throw new SubmissionError(result && "code" in result ? result.code : "submission_failed");
+  }
+  return { id: result.reference };
 }

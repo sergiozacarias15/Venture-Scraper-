@@ -147,7 +147,10 @@
   "notifications": {
     "saved": "Tu evaluación se ha guardado.",
     "error": "No hemos podido guardar tu evaluación. Inténtalo de nuevo.",
-    "stepError": "Revisa los campos resaltados."
+    "stepError": "Revisa los campos resaltados.",
+    "duplicate": "Ya se ha enviado una solicitud con estos datos de contacto.",
+    "rateLimited": "Demasiados intentos. Espera e inténtalo de nuevo más tarde.",
+    "invalidSubmission": "No se pudo validar parte de la información. Revisa tus respuestas."
   },
   "confirmation": {
     "eyebrow": "Evaluación recibida",
@@ -163,7 +166,7 @@
   "privacy": {
     "link": "Aviso de privacidad",
     "title": "Aviso de privacidad",
-    "body": "Venture Sports USA utiliza la información enviada mediante esta evaluación para analizar posibles oportunidades de reclutamiento universitario y comunicarse con el deportista o su tutor. No envíes información sensible que no se haya solicitado. Cuando se conecte Supabase, las condiciones de conservación y eliminación deberán actualizarse para ajustarse a la política de privacidad oficial de la organización.",
+    "body": "Venture Sports USA utiliza la información enviada mediante esta evaluación para analizar posibles oportunidades de reclutamiento universitario y comunicarse con el deportista o su tutor. No envíes información sensible que no se haya solicitado. Los datos se almacenan en el CRM de Venture Sports USA y deben conservarse o eliminarse conforme a la política de privacidad oficial de la organización y la legislación aplicable.",
     "back": "Volver a la evaluación"
   },
   "footer": {

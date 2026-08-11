@@ -92,15 +92,14 @@ export const createAssessmentSchema = (t: Translate) => {
 
 export type AssessmentValues = z.infer<ReturnType<typeof createAssessmentSchema>>;
 
-export interface AssessmentSubmission extends AssessmentValues {
-  metadata: {
-    sport: "Volleyball";
-    agent: "Sergio Zacarias";
+export interface AssessmentSubmissionRequest {
+  answers: AssessmentValues;
+  context: {
     language: string;
-    country: string;
-    marketingSource: string;
-    submittedAt: string;
     sourceRoute: string;
+    formStartedAt: number;
+    clientSubmissionId: string;
+    website: string;
   };
 }
 

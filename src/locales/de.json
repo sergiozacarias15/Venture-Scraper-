@@ -147,7 +147,10 @@
   "notifications": {
     "saved": "Deine Beurteilung wurde gespeichert.",
     "error": "Deine Beurteilung konnte nicht gespeichert werden. Bitte versuche es erneut.",
-    "stepError": "Bitte überprüfe die hervorgehobenen Felder."
+    "stepError": "Bitte überprüfe die hervorgehobenen Felder.",
+    "duplicate": "Mit diesen Kontaktdaten wurde bereits eine Bewerbung eingereicht.",
+    "rateLimited": "Zu viele Versuche. Bitte warte und versuche es später erneut.",
+    "invalidSubmission": "Einige Angaben konnten nicht validiert werden. Bitte überprüfe deine Antworten."
   },
   "confirmation": {
     "eyebrow": "Beurteilung eingegangen",
@@ -163,7 +166,7 @@
   "privacy": {
     "link": "Datenschutzhinweis",
     "title": "Datenschutzhinweis",
-    "body": "Venture Sports USA verwendet die mit dieser Beurteilung übermittelten Angaben, um mögliche Rekrutierungschancen an Hochschulen zu prüfen und mit dem Athleten oder Erziehungsberechtigten zu kommunizieren. Übermittle keine sensiblen Angaben, nach denen nicht gefragt wurde. Sobald Supabase verbunden ist, sollten die Aufbewahrungs- und Löschfristen an die offizielle Datenschutzrichtlinie der Organisation angepasst werden.",
+    "body": "Venture Sports USA verwendet die mit dieser Beurteilung übermittelten Angaben, um mögliche Rekrutierungschancen an Hochschulen zu prüfen und mit dem Athleten oder Erziehungsberechtigten zu kommunizieren. Übermittle keine sensiblen Angaben, nach denen nicht gefragt wurde. Die Daten werden im CRM von Venture Sports USA gespeichert und müssen gemäß der offiziellen Datenschutzrichtlinie der Organisation und dem geltenden Recht aufbewahrt oder gelöscht werden.",
     "back": "Zurück zur Beurteilung"
   },
   "footer": {

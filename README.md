@@ -1,16 +1,15 @@
 # Venture Sports USA — Volleyball Assessment
 
-A standalone, mobile-first international volleyball recruiting assessment built with Vite, React, TypeScript, React Router, React Hook Form, Zod, Tailwind CSS, shadcn-style UI primitives, i18next, and Supabase.
+A standalone, mobile-first international volleyball recruiting assessment built with Vite, React, TypeScript, React Router, React Hook Form, Zod, Tailwind CSS, shadcn-style UI primitives, i18next, Vercel Functions, and Pipedrive.
 
 ## Local preview
 
 ```bash
 npm install
-cp .env.example .env.local
 npm run dev
 ```
 
-Open `http://localhost:5173/sergiozacarias`. The default submission mode is `mock`: completed assessments are saved only in the current browser under the localStorage key `venture-volleyball-mock-submissions`.
+Open `http://localhost:5173/sergiozacarias`. Vite previews the frontend; production submissions require the Vercel Function and its server-only environment variables. In-progress answers are retained in localStorage under `venture-volleyball-assessment-draft` and removed only after Pipedrive confirms the deal and note.
 
 ## Languages
 
@@ -25,21 +24,28 @@ Translations live in `src/locales/{language}.json`. To add a language:
 
 The volleyball hero image in `public/media/volleyball-hero-action.webp` is an original AI-generated project asset with no third-party team, athlete, university, sponsor, or stock-library branding. It can be replaced later without changing the hero or advisor-card layout. The Venture logo files under `public/brand` are kept unmodified.
 
-## Connect Supabase
+## Pipedrive production integration
 
-1. Create a Supabase project.
-2. Run `supabase/schema.sql` in the Supabase SQL editor.
-3. Copy `.env.example` to `.env.local`.
-4. Set `VITE_SUPABASE_URL` and the public `VITE_SUPABASE_ANON_KEY`.
-5. Set `VITE_SUBMISSION_MODE=supabase`.
-6. Restart the development server and submit a test assessment.
+`POST /api/submit-assessment` validates the complete payload server-side, checks the configured pipeline/stage, finds or creates a Person, prevents duplicate application Deals, creates the Deal, and attaches the formatted assessment note. It sends the API token only in Pipedrive's `x-api-token` server-to-server header.
 
-The included policy allows anonymous inserts but blocks anonymous reads, updates, and deletes. Before a public production launch, route submissions through a Supabase Edge Function and add CAPTCHA, server-side validation, rate limiting, retention rules, restricted staff access, and the organization’s final legal privacy notice.
+Required Vercel environment variables:
+
+```dotenv
+PIPEDRIVE_API_TOKEN=your_server_only_api_token
+PIPEDRIVE_COMPANY_DOMAIN=your_company_subdomain
+PIPEDRIVE_OWNER_ID=the_numeric_user_id_for_sergio_zacarias
+PIPEDRIVE_PIPELINE_ID=2
+PIPEDRIVE_STAGE_ID=the_numeric_id_for_NEW_PLAYER_LEAD
+```
+
+Do not prefix any of these variables with `VITE_`. Set them for Production (and Preview only if you intentionally want preview submissions connected to a non-production test account). The endpoint rejects a stage unless its Pipedrive name is exactly `NEW PLAYER (LEAD)` and it belongs to pipeline ID `2`.
+
+The endpoint includes strict Zod validation, same-origin enforcement, a honeypot and minimum-completion-time check, request-size limits, per-IP in-memory throttling, client idempotency, durable Pipedrive deal duplicate checks, escaped HTML notes, API timeouts, and deal rollback when note creation fails.
 
 The submission payload includes:
 
-- `sport: "Volleyball"`
-- `agent: "Sergio Zacarias"`
+- sport: Volleyball
+- Deal owner: Sergio Zacarias, via `PIPEDRIVE_OWNER_ID`
 - selected/detected language
 - voluntarily entered country of residence
 - marketing source
@@ -52,5 +58,6 @@ The submission payload includes:
 npm run dev
 npm run build
 npm run lint
+npm test
 npm run preview
 ```

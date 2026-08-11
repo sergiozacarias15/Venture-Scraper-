@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeft,
@@ -19,10 +19,10 @@ import {
   createAssessmentSchema,
   defaultValues,
   getAge,
-  type AssessmentSubmission,
+  type AssessmentSubmissionRequest,
   type AssessmentValues,
 } from "../lib/assessment";
-import { submitAssessment } from "../lib/submission";
+import { SubmissionError, submitAssessment } from "../lib/submission";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Select } from "./ui/select";
@@ -74,6 +74,7 @@ const englishValues = ["beginner", "elementary", "intermediate", "upperIntermedi
 const budgetValues = ["under10", "10to20", "20to30", "30to40", "over40", "unsure"];
 const goalValues = ["scholarship", "academic", "professional", "experience", "other"];
 const sourceValues = ["instagram", "whatsapp", "friend", "coach", "search", "event", "other"];
+const DRAFT_STORAGE_KEY = "venture-volleyball-assessment-draft";
 const stepMeta = [
   { key: "athlete", icon: CircleUserRound },
   { key: "volleyball", icon: Volleyball },
@@ -169,6 +170,17 @@ export function AssessmentForm() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const schema = useMemo(() => createAssessmentSchema(t), [t]);
+  const initialValues = useMemo(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(DRAFT_STORAGE_KEY) ?? "{}") as Partial<AssessmentValues>;
+      return { ...defaultValues, ...saved };
+    } catch {
+      return defaultValues;
+    }
+  }, []);
+  const formStartedAt = useRef(Date.now());
+  const clientSubmissionId = useRef(crypto.randomUUID());
+  const honeypot = useRef<HTMLInputElement>(null);
   const {
     register,
     handleSubmit,
@@ -177,15 +189,23 @@ export function AssessmentForm() {
     formState: { errors, isSubmitting },
   } = useForm<AssessmentValues>({
     resolver: zodResolver(schema),
-    defaultValues,
+    defaultValues: initialValues,
     mode: "onTouched",
   });
 
+  const draftValues = useWatch({ control });
   const birthDate = useWatch({ control, name: "birthDate" });
   const age = getAge(birthDate);
   const isMinor = age !== null && age < 18;
   const optional = t("common.optional");
   const ActiveStepIcon = stepMeta[step].icon;
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draftValues));
+    }, 350);
+    return () => window.clearTimeout(timeout);
+  }, [draftValues]);
 
   const nextStep = async () => {
     const valid = await trigger(stepFields[step], { shouldFocus: true });
@@ -204,32 +224,49 @@ export function AssessmentForm() {
 
   const onSubmit = async (values: AssessmentValues) => {
     const language = i18n.resolvedLanguage?.split("-")[0] ?? "en";
-    const payload: AssessmentSubmission = {
-      ...values,
-      metadata: {
-        sport: "Volleyball",
-        agent: "Sergio Zacarias",
+    const payload: AssessmentSubmissionRequest = {
+      answers: values,
+      context: {
         language,
-        country: values.residenceCountry,
-        marketingSource: values.marketingSource,
-        submittedAt: new Date().toISOString(),
         sourceRoute: window.location.pathname,
+        formStartedAt: formStartedAt.current,
+        clientSubmissionId: clientSubmissionId.current,
+        website: honeypot.current?.value ?? "",
       },
     };
 
     try {
       const result = await submitAssessment(payload);
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
       toast.success(t("notifications.saved"));
       navigate("/sergiozacarias/confirmation", {
         state: { name: values.fullName.split(" ")[0], reference: result.id },
       });
-    } catch {
-      toast.error(t("notifications.error"));
+    } catch (error) {
+      const code = error instanceof SubmissionError ? error.code : "submission_failed";
+      const messageKey =
+        code === "duplicate"
+          ? "notifications.duplicate"
+          : code === "rate_limited"
+            ? "notifications.rateLimited"
+            : code === "invalid_submission"
+              ? "notifications.invalidSubmission"
+              : "notifications.error";
+      toast.error(t(messageKey));
     }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      <input
+        ref={honeypot}
+        type="text"
+        name="website"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        className="pointer-events-none absolute -left-[9999px] size-px opacity-0"
+      />
       <div className="mb-8" aria-label={t("progress.label", { current: step + 1, total: 4 })}>
         <div className="mb-3 flex items-center justify-between">
           <span className="flex items-center gap-2 text-xs font-bold tracking-wide text-[#150A56] uppercase">

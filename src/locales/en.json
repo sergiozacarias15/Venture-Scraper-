@@ -147,7 +147,10 @@
   "notifications": {
     "saved": "Your assessment was saved.",
     "error": "We could not save your assessment. Please try again.",
-    "stepError": "Please review the highlighted fields."
+    "stepError": "Please review the highlighted fields.",
+    "duplicate": "An application with these contact details has already been submitted.",
+    "rateLimited": "Too many attempts. Please wait and try again later.",
+    "invalidSubmission": "Some information could not be validated. Please review your answers."
   },
   "confirmation": {
     "eyebrow": "Assessment received",
@@ -163,7 +166,7 @@
   "privacy": {
     "link": "Privacy notice",
     "title": "Privacy notice",
-    "body": "The information submitted through this assessment is used by Venture Sports USA to evaluate potential university recruiting opportunities and communicate with the athlete or guardian. Do not submit sensitive information that is not requested. When Supabase is connected, retention and deletion terms should be updated to match the organization’s formal privacy policy.",
+    "body": "The information submitted through this assessment is used by Venture Sports USA to evaluate potential university recruiting opportunities and communicate with the athlete or guardian. Do not submit sensitive information that is not requested. It is stored in Venture Sports USA’s CRM and must be retained or deleted in accordance with the organization’s formal privacy policy and applicable law.",
     "back": "Back to assessment"
   },
   "footer": {
