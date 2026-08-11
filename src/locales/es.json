@@ -5,8 +5,12 @@
     "eyebrow": "Reclutamiento internacional de voleibol",
     "title": "Tu camino hacia el voleibol universitario en EE. UU. comienza aquí.",
     "description": "Completa esta evaluación para que nuestro equipo pueda valorar tu perfil deportivo y académico.",
-    "trust": "Evaluación segura · Unos 8 minutos · Sin compromiso",
-    "agent": "Evaluación asignada a Sergio Zacarias"
+    "trust": "Evaluación segura · Unos 8 minutos · Sin compromiso"
+  },
+  "advisor": {
+    "name": "Sergio Zacarias",
+    "role": "Asesor de reclutamiento internacional",
+    "company": "Venture Sports USA"
   },
   "progress": {
     "label": "Paso {{current}} de {{total}}",

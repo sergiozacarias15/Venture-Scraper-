@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { ArrowLeft, CheckCircle2, ShieldCheck } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ShieldCheck, UserRound } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AssessmentForm } from "./components/AssessmentForm";
@@ -43,11 +43,14 @@ function AssessmentPage() {
   return (
     <PageChrome>
       <main>
-        <section className="relative overflow-hidden bg-[#150A56] text-white">
-          <div className="absolute inset-0 opacity-25 [background-image:radial-gradient(circle_at_20%_20%,#FCEC62_0,transparent_26%),radial-gradient(circle_at_85%_70%,#FFBC7D_0,transparent_30%)]" />
+        <section className="relative overflow-hidden bg-[#150A56] pb-14 text-white sm:pb-18">
+          <div className="absolute inset-0 [background-image:radial-gradient(circle_at_10%_20%,rgba(252,236,98,0.18)_0,transparent_25%),radial-gradient(circle_at_70%_100%,rgba(255,188,125,0.12)_0,transparent_34%),linear-gradient(120deg,#150A56_0%,#21156B_54%,#0C120F_100%)]" />
+          <div className="volleyball-grid absolute inset-y-0 right-0 w-3/5 opacity-20" />
+          <div className="absolute -top-28 -left-24 size-80 rounded-full border border-white/10" />
+          <div className="absolute -top-16 -left-12 size-56 rounded-full border border-white/8" />
           <div className="absolute -right-28 -bottom-40 size-96 rounded-full border-[48px] border-white/5" />
-          <div className="relative mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:px-6 sm:py-16 lg:grid-cols-[1fr_340px] lg:items-center lg:py-20">
-            <div className="max-w-3xl">
+          <div className="relative mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 sm:py-16 lg:grid-cols-[minmax(0,1fr)_450px] lg:items-center lg:gap-14 lg:py-20">
+            <div className="max-w-2xl">
               <p className="mb-4 text-xs font-bold tracking-[0.18em] text-[#FCEC62] uppercase">{t("hero.eyebrow")}</p>
               <h1 className="font-display text-5xl leading-[0.95] font-bold tracking-wide uppercase sm:text-6xl lg:text-7xl">
                 {t("hero.title")}
@@ -58,23 +61,43 @@ function AssessmentPage() {
                 {t("hero.trust")}
               </p>
             </div>
-            <div className="hidden rounded-3xl border border-white/10 bg-white/5 p-7 backdrop-blur lg:block">
-              <img
-                src="/brand/venture-sports-usa-mark.png"
-                alt=""
-                aria-hidden="true"
-                className="h-24 w-auto object-contain"
-              />
-              <div className="mt-8 h-1.5 overflow-hidden rounded-full bg-white/10">
-                <div className="h-full w-2/3 rounded-full bg-[#FCEC62]" />
+            <div className="relative mx-auto w-full max-w-[450px]">
+              <div className="relative aspect-[4/3] overflow-hidden rounded-[1.75rem] border border-white/15 bg-[#0C120F] shadow-2xl shadow-black/30 sm:rounded-[2rem]">
+                <img
+                  src="/media/volleyball-hero-action.webp"
+                  alt=""
+                  aria-hidden="true"
+                  fetchPriority="high"
+                  className="h-full w-full object-cover object-center"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#150A56]/85 via-[#150A56]/10 to-black/5" />
+                <div className="absolute inset-0 ring-1 ring-inset ring-white/10" />
               </div>
-              <p className="mt-4 text-sm leading-relaxed font-semibold text-slate-200">{t("hero.agent")}</p>
+              <div className="relative mx-3 -mt-14 rounded-2xl border border-white/70 bg-white/95 p-4 text-[#0C120F] shadow-xl shadow-black/20 backdrop-blur sm:mx-5 sm:p-5">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <div className="grid size-12 shrink-0 place-items-center overflow-hidden rounded-full bg-[#150A56] text-[#FCEC62] ring-4 ring-[#FCEC62]/25 sm:size-14">
+                    <UserRound aria-hidden="true" className="size-6 sm:size-7" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-bold text-[#150A56]">{t("advisor.name")}</p>
+                    <p className="mt-0.5 text-xs font-semibold text-slate-600 sm:text-sm">{t("advisor.role")}</p>
+                    <p className="mt-0.5 text-[11px] font-bold tracking-wider text-[#150A56]/65 uppercase">{t("advisor.company")}</p>
+                  </div>
+                  <img
+                    src="/brand/venture-sports-usa-mark.png"
+                    alt=""
+                    aria-hidden="true"
+                    className="hidden size-11 shrink-0 object-contain sm:block"
+                  />
+                </div>
+              </div>
             </div>
           </div>
+          <div className="absolute right-0 bottom-0 left-0 h-12 bg-gradient-to-b from-transparent to-[#F3F3F3]" />
         </section>
 
-        <section className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
-          <div className="rounded-2xl border border-[#150A56]/10 bg-white p-5 shadow-xl shadow-[#150A56]/8 sm:rounded-3xl sm:p-8 lg:p-10">
+        <section className="relative z-10 mx-auto -mt-6 max-w-4xl px-4 pb-10 sm:-mt-9 sm:px-6 sm:pb-14">
+          <div className="rounded-2xl border border-[#150A56]/10 bg-white p-5 shadow-2xl shadow-[#150A56]/10 sm:rounded-3xl sm:p-8 lg:p-10">
             <p className="mb-6 text-xs text-slate-500">{t("common.requiredHint")}</p>
             <AssessmentForm />
           </div>

@@ -21,6 +21,10 @@ Translations live in `src/locales/{language}.json`. To add a language:
 1. Copy `src/locales/en.json` and translate every value without changing its keys.
 2. Import the file and add its language code and label in `src/i18n.ts`.
 
+## Visual assets
+
+The volleyball hero image in `public/media/volleyball-hero-action.webp` is an original AI-generated project asset with no third-party team, athlete, university, sponsor, or stock-library branding. It can be replaced later without changing the hero or advisor-card layout. The Venture logo files under `public/brand` are kept unmodified.
+
 ## Connect Supabase
 
 1. Create a Supabase project.

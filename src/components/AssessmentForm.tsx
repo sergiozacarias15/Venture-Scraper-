@@ -1,6 +1,16 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, ArrowRight, Check, LoaderCircle, LockKeyhole } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  CircleUserRound,
+  GraduationCap,
+  LoaderCircle,
+  LockKeyhole,
+  Target,
+  Volleyball,
+} from "lucide-react";
 import { useForm, useWatch, type FieldPath } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -64,6 +74,12 @@ const englishValues = ["beginner", "elementary", "intermediate", "upperIntermedi
 const budgetValues = ["under10", "10to20", "20to30", "30to40", "over40", "unsure"];
 const goalValues = ["scholarship", "academic", "professional", "experience", "other"];
 const sourceValues = ["instagram", "whatsapp", "friend", "coach", "search", "event", "other"];
+const stepMeta = [
+  { key: "athlete", icon: CircleUserRound },
+  { key: "volleyball", icon: Volleyball },
+  { key: "academics", icon: GraduationCap },
+  { key: "goals", icon: Target },
+];
 
 function Field({
   label,
@@ -105,8 +121,9 @@ function FormSection({
   children: ReactNode;
 }) {
   return (
-    <section>
-      <div className="mb-7 border-b border-slate-200 pb-5">
+    <section className="form-step-enter relative overflow-hidden rounded-2xl border border-[#150A56]/10 bg-gradient-to-br from-white via-white to-[#F3F3F3]/65 p-5 shadow-sm sm:p-7">
+      <div className="absolute top-0 left-0 h-1 w-20 rounded-br-full bg-[#FCEC62]" />
+      <div className="mb-7 border-b border-[#150A56]/10 pb-5">
         <h2 className="font-display text-3xl font-semibold tracking-wide text-[#150A56] uppercase sm:text-4xl">{title}</h2>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">{description}</p>
       </div>
@@ -168,6 +185,7 @@ export function AssessmentForm() {
   const age = getAge(birthDate);
   const isMinor = age !== null && age < 18;
   const optional = t("common.optional");
+  const ActiveStepIcon = stepMeta[step].icon;
 
   const nextStep = async () => {
     const valid = await trigger(stepFields[step], { shouldFocus: true });
@@ -214,12 +232,13 @@ export function AssessmentForm() {
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
       <div className="mb-8" aria-label={t("progress.label", { current: step + 1, total: 4 })}>
         <div className="mb-3 flex items-center justify-between">
-          <span className="text-xs font-bold tracking-wide text-[#150A56] uppercase">
+          <span className="flex items-center gap-2 text-xs font-bold tracking-wide text-[#150A56] uppercase">
+            <span className="grid size-8 place-items-center rounded-lg bg-[#FCEC62]/55">
+              <ActiveStepIcon aria-hidden="true" className="size-4" />
+            </span>
             {t("progress.label", { current: step + 1, total: 4 })}
           </span>
-          <span className="text-xs font-semibold text-slate-500">
-            {t(`progress.${["athlete", "volleyball", "academics", "goals"][step]}`)}
-          </span>
+          <span className="text-xs font-semibold text-slate-500">{t(`progress.${stepMeta[step].key}`)}</span>
         </div>
         <div
           role="progressbar"
@@ -234,13 +253,20 @@ export function AssessmentForm() {
           />
         </div>
         <div className="mt-4 hidden grid-cols-4 gap-2 sm:grid">
-          {["athlete", "volleyball", "academics", "goals"].map((key, index) => (
-            <span
+          {stepMeta.map(({ key, icon: StepIcon }, index) => (
+            <div
               key={key}
-              className={`text-xs font-semibold ${index <= step ? "text-slate-900" : "text-slate-400"}`}
+              className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 transition-colors ${
+                index === step
+                  ? "border-[#150A56]/20 bg-[#FCEC62]/20 text-[#150A56]"
+                  : index < step
+                    ? "border-[#150A56]/10 bg-[#150A56]/5 text-[#150A56]"
+                    : "border-slate-200 bg-white text-slate-400"
+              }`}
             >
-              {t(`progress.${key}`)}
-            </span>
+              <StepIcon aria-hidden="true" className="size-4 shrink-0" />
+              <span className="truncate text-xs font-semibold">{t(`progress.${key}`)}</span>
+            </div>
           ))}
         </div>
       </div>

@@ -5,8 +5,12 @@
     "eyebrow": "International volleyball recruiting",
     "title": "Your U.S. college volleyball journey starts here.",
     "description": "Complete this assessment so our team can evaluate your athletic and academic profile.",
-    "trust": "Secure assessment · About 8 minutes · No commitment",
-    "agent": "Assessment assigned to Sergio Zacarias"
+    "trust": "Secure assessment · About 8 minutes · No commitment"
+  },
+  "advisor": {
+    "name": "Sergio Zacarias",
+    "role": "International Recruiting Advisor",
+    "company": "Venture Sports USA"
   },
   "progress": {
     "label": "Step {{current}} of {{total}}",

@@ -5,8 +5,12 @@
     "eyebrow": "Reclutamento internazionale di pallavolo",
     "title": "Il tuo percorso nella pallavolo universitaria statunitense inizia qui.",
     "description": "Completa questa valutazione per permettere al nostro team di esaminare il tuo profilo sportivo e accademico.",
-    "trust": "Valutazione sicura · Circa 8 minuti · Nessun impegno",
-    "agent": "Valutazione assegnata a Sergio Zacarias"
+    "trust": "Valutazione sicura · Circa 8 minuti · Nessun impegno"
+  },
+  "advisor": {
+    "name": "Sergio Zacarias",
+    "role": "Consulente per il recruiting internazionale",
+    "company": "Venture Sports USA"
   },
   "progress": {
     "label": "Passaggio {{current}} di {{total}}",

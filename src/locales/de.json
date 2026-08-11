@@ -5,8 +5,12 @@
     "eyebrow": "Internationale Volleyball-Rekrutierung",
     "title": "Dein Weg zum College-Volleyball in den USA beginnt hier.",
     "description": "Fülle diese Beurteilung aus, damit unser Team dein sportliches und schulisches Profil prüfen kann.",
-    "trust": "Sichere Beurteilung · Etwa 8 Minuten · Unverbindlich",
-    "agent": "Beurteilung zugewiesen an Sergio Zacarias"
+    "trust": "Sichere Beurteilung · Etwa 8 Minuten · Unverbindlich"
+  },
+  "advisor": {
+    "name": "Sergio Zacarias",
+    "role": "Berater für internationale Rekrutierung",
+    "company": "Venture Sports USA"
   },
   "progress": {
     "label": "Schritt {{current}} von {{total}}",
