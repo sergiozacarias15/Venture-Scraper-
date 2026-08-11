@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, ArrowRight, Check, LoaderCircle, LockKeyhole } from "lucide-react";
-import { useForm, type FieldPath } from "react-hook-form";
+import { useForm, useWatch, type FieldPath } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -155,8 +155,8 @@ export function AssessmentForm() {
   const {
     register,
     handleSubmit,
+    control,
     trigger,
-    watch,
     formState: { errors, isSubmitting },
   } = useForm<AssessmentValues>({
     resolver: zodResolver(schema),
@@ -164,7 +164,7 @@ export function AssessmentForm() {
     mode: "onTouched",
   });
 
-  const birthDate = watch("birthDate");
+  const birthDate = useWatch({ control, name: "birthDate" });
   const age = getAge(birthDate);
   const isMinor = age !== null && age < 18;
   const optional = t("common.optional");
