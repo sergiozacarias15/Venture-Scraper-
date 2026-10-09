@@ -8,15 +8,15 @@ export function capabilities(env: Env = process.env): Capability[] {
   const demo = getVolleyboxMode(env).mode === "demo";
   return [
     { name: "Athlete database, filters, dedupe, CSV import", state: "working", detail: "Real data you import. Unique on profile URL; suppressed profiles are never re-added." },
-    { name: "Discovering athletes on Volleybox automatically", state: demo ? "demo" : "unavailable",
-      detail: demo ? "Demo mode generates synthetic athletes." : "Not available: Volleybox publishes no API, and its terms prohibit scraping/harvesting without permission. Import athletes instead." },
+    { name: "Discovery on Volleybox's ranking page (volleybox.net/players/ranking)", state: demo ? "demo" : "assisted",
+      detail: demo ? "Demo mode generates synthetic athletes." : "Assisted: each birth year x country x section becomes a pass. You set the page's filters, review the players and paste them in; the app filters, dedupes and tracks the passes. Automatic reading of the page is not authorized and not built." },
     { name: "Message drafting (EN/IT/ES/PT), minor safeguards, approval", state: "working", detail: "Real. Drafts use your imported athletes' data." },
-    { name: "Sending messages on Volleybox", state: demo ? "demo" : "assisted",
-      detail: demo ? "Demo mode records fake sends." : "Assisted: you send each approved message in Volleybox's own message form, then confirm here. Daily cap, minimum gap, suppression and duplicate checks are enforced on confirm." },
-    { name: "Receiving replies from Volleybox", state: "assisted", detail: "No inbound feed exists. Paste or log each reply on the athlete page; it is classified, suppressions applied and leads/alerts created." },
+    { name: "Sending in Volleybox's private-message inbox", state: demo ? "demo" : "assisted",
+      detail: demo ? "Demo mode records fake sends." : "Assisted: you paste each approved message into Volleybox's composer and press its send button, then confirm here with the /pm/inbox/{id} link. Daily cap, minimum gap, suppression and duplicate checks are enforced on confirm." },
+    { name: "Reading replies in the inbox", state: "assisted", detail: "No inbound feed is available to the app. The Inbox's 'To check' list opens each stored conversation link; you paste any reply back, and it is classified, suppressions applied and leads/alerts created." },
     { name: "Reply classification, suppression, follow-up stop, alerts, leads", state: "working", detail: "Real, for EN/IT/ES/PT replies." },
     { name: "Follow-ups and No Response tracking", state: "working", detail: "Follow-up drafts appear in the same ready-to-send list; the sequence stops on any reply or decline." },
-    { name: "Browser automation / scraping of Volleybox", state: "unavailable", detail: "Not built and not planned: prohibited by Volleybox's terms and protected by a bot challenge." },
+    { name: "Automated access to the ranking page or inbox (API, browser automation, scraping)", state: "unavailable", detail: "Not built, not tested, and not authorized. Volleybox's terms prohibit scraping without permission and the site uses a bot challenge. Becomes possible only with written permission." },
     { name: "Pipedrive sync", state: "unavailable", detail: "Database columns and payload mapper only; no API calls yet." },
     { name: "Instagram / WhatsApp", state: "assisted", detail: "You continue those conversations personally; the app records that you moved the conversation." },
   ];

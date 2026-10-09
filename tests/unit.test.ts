@@ -163,13 +163,15 @@ describe("integration status", () => {
   const state = (env: Record<string, string>, prefix: string) => capabilities(env).find((c) => c.name.startsWith(prefix))!.state;
   it("never claims automated Volleybox access", () => {
     for (const env of [{}, { VOLLEYBOX_MODE: "demo" }, { VOLLEYBOX_MODE: "live", VOLLEYBOX_API_KEY: "k" }]) {
-      expect(capabilities(env).some((c) => c.state === "working" && /Volleybox/.test(c.name) && /(Sending|Discovering|Receiving)/.test(c.name))).toBe(false);
+      expect(capabilities(env).some((c) => c.state === "working" && /Volleybox/.test(c.name) && /(Sending|Discovery|Reading|Automated)/.test(c.name))).toBe(false);
     }
     expect(AUTOMATION_REQUIREMENTS.join(" ")).toMatch(/Written permission/);
   });
   it("reports assisted sending by default and demo only when requested", () => {
     expect(state({}, "Sending")).toBe("assisted");
-    expect(state({}, "Discovering")).toBe("unavailable");
+    expect(state({}, "Discovery")).toBe("assisted");
+    expect(state({}, "Reading replies")).toBe("assisted");
+    expect(state({}, "Automated access")).toBe("unavailable");
     expect(state({ VOLLEYBOX_MODE: "demo" }, "Sending")).toBe("demo");
     expect(state({}, "Pipedrive")).toBe("unavailable");
   });

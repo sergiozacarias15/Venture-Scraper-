@@ -10,6 +10,7 @@ import {
 import { evaluateSendGate, nextAttemptAt } from "./schedule";
 import { checkContactEligibility, isPotentialMinor, requiresHumanApproval } from "./safeguards";
 import { MAX_MESSAGE_LENGTH, renderMessage } from "./templates";
+import { parseConversationRef, type ConversationRef } from "@/modules/volleybox/interfaces";
 
 type AthleteRow = {
   id: string; profile_url: string; volleybox_id: string | null; first_name: string; birth_year: number | null;
@@ -288,7 +289,11 @@ export async function listReadyToSend(db: Db) {
  * sending apply (suppression, duplicates, age, daily cap, minimum gap, pause); the sending window is not
  * enforced because a human is choosing when to send.
  */
-export async function confirmManualSend(db: Db, messageId: string, now = new Date()) {
+export async function confirmManualSend(db: Db, messageId: string, now = new Date(), conversationLink?: string | null) {
+  const ref = conversationLink?.trim() ? parseConversationRef(conversationLink) : null;
+  if (conversationLink?.trim() && !ref) {
+    throw new Error("That is not a Volleybox conversation link. Expected https://volleybox.net/pm/inbox/{conversation_id}.");
+  }
   const s = await getSettings(db);
   const [stats] = await db.query<{ n: number; last: Date | null }>(
     `select count(*) filter (where sent_at > $1)::int as n, max(sent_at) as last from messages where direction = 'out' and status = 'sent'`,
@@ -301,6 +306,10 @@ export async function confirmManualSend(db: Db, messageId: string, now = new Dat
     lastSentAt: stats.last,
   });
   if (!gate.allowed) throw new Error(gate.reason);
+  if (ref) {
+    const [target] = await db.query<{ athlete_id: string }>("select athlete_id from messages where id = $1", [messageId]);
+    if (target) await assertConversationFree(db, ref, target.athlete_id);
+  }
 
   const [m] = await db.query<QueuedMessage>(
     `update messages set status = 'sending', attempts = attempts + 1, updated_at = now()
@@ -317,9 +326,48 @@ export async function confirmManualSend(db: Db, messageId: string, now = new Dat
     throw new Error(revert ? "This message still needs approval." : `Not sent: ${block}. The message was cancelled.`);
   }
   const [a] = await db.query<AthleteRow>("select * from athletes where id = $1", [m.athlete_id]);
+  const [existing] = await db.query<{ thread_id: string | null; conversation_url: string | null }>(
+    "select thread_id, conversation_url from conversations where athlete_id = $1", [a.id]);
   const channel = { id: "assisted", conversationUrl: (_t: string | null, url: string) => url };
-  await recordSent(db, m, a, { externalId: `manual-${m.id}`, threadId: `manual-${a.id}` }, channel, now);
+  await recordSent(db, m, a, {
+    externalId: `manual-${m.id}`,
+    threadId: ref?.id ?? existing?.thread_id ?? `manual-${a.id}`,
+    conversationUrl: ref?.url ?? existing?.conversation_url ?? undefined,
+  }, channel, now);
   await logEvent(db, "info", "outreach", "Operator confirmed a message was sent on Volleybox.", { athleteId: a.id });
+}
+
+async function assertConversationFree(db: Db, ref: ConversationRef, athleteId: string) {
+  const [other] = await db.query<{ full_name: string }>(
+    `select a.full_name from conversations c join athletes a on a.id = c.athlete_id
+     where c.adapter = 'assisted' and c.thread_id = $1 and c.athlete_id <> $2`, [ref.id, athleteId]);
+  if (other) throw new Error(`That conversation link is already attached to ${other.full_name}.`);
+}
+
+/** Stores the Volleybox /pm/inbox/{id} link for an athlete's conversation so replies can be checked and matched. */
+export async function attachConversation(db: Db, athleteId: string, link: string) {
+  const ref = parseConversationRef(link);
+  if (!ref) throw new Error("That is not a Volleybox conversation link. Expected https://volleybox.net/pm/inbox/{conversation_id}.");
+  await assertConversationFree(db, ref, athleteId);
+  const rows = await db.query(
+    "update conversations set thread_id = $2, conversation_url = $3, updated_at = now() where athlete_id = $1 returning id",
+    [athleteId, ref.id, ref.url],
+  );
+  if (!rows.length) throw new Error("This athlete has not been contacted yet.");
+  await logEvent(db, "info", "outreach", "Conversation link attached.", { athleteId });
+}
+
+/** Contacted athletes whose conversation is awaiting a reply, oldest outbound first: the operator's "check Volleybox" worklist. */
+export async function listConversationsToCheck(db: Db) {
+  return db.query<{
+    athlete_id: string; full_name: string; profile_url: string; conversation_url: string | null; thread_id: string | null;
+    last_outbound_at: Date | null; followups_sent: number;
+  }>(
+    `select c.athlete_id, a.full_name, a.profile_url, c.conversation_url, c.thread_id, c.last_outbound_at, c.followups_sent
+     from conversations c join athletes a on a.id = c.athlete_id
+     where c.status = 'active' and c.outcome = 'pending' and c.last_inbound_at is null and a.status = 'contacted'
+     order by c.last_outbound_at limit 200`,
+  );
 }
 
 /** Volleybox does not let the operator message this athlete (blocked, restricted by the athlete, etc.). */

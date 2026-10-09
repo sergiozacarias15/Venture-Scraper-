@@ -27,7 +27,7 @@ export async function createTestDb(): Promise<Db> {
       await shared.exec(readFileSync(path.join(dir, f), "utf8"));
     }
   }
-  await shared.exec(`truncate settings, discovery_runs, athletes, suppressions, conversations, messages, leads, alerts, jobs, event_log restart identity cascade; insert into settings (id) values (1);`);
+  await shared.exec(`truncate settings, discovery_runs, discovery_passes, athletes, suppressions, conversations, messages, leads, alerts, jobs, event_log restart identity cascade; insert into settings (id) values (1);`);
   return new PgliteDb(shared);
 }
 

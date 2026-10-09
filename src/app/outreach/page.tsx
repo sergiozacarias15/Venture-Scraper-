@@ -7,6 +7,7 @@ import { getDb } from "@/lib/db";
 import { getVolleyboxMode } from "@/lib/env";
 import { getSettings } from "@/lib/settings";
 import { isPotentialMinor } from "@/modules/messaging/safeguards";
+import { INBOX_URL_PREFIX } from "@/modules/volleybox/interfaces";
 
 export const dynamic = "force-dynamic";
 const TABS = [["pending_approval", "Awaiting approval"], ["approved", "Ready to send"], ["sent", "Sent"], ["failed", "Failed"], ["cancelled", "Cancelled"]] as const;
@@ -49,9 +50,9 @@ export default async function OutreachPage({ searchParams }: { searchParams: Pro
       {assisted && tab === "approved" && (
         <Card title="How sending works" className="mb-4">
           <ol className="list-decimal space-y-1 pl-5 text-sm text-slate-700">
-            <li>Click <strong>Open profile</strong> and use Volleybox&apos;s own message button (you must be signed in to your Volleybox account).</li>
-            <li>Click <strong>Copy message</strong>, paste it, and send it yourself.</li>
-            <li>Come back and click <strong>I sent it</strong>. The app records it, enforces your daily cap and gap, and starts the follow-up timer.</li>
+            <li>Click <strong>Open profile</strong> and start a private message from Volleybox (you must be signed in to your own account).</li>
+            <li>Click <strong>Copy message</strong>, paste it into Volleybox&apos;s composer, and press Volleybox&apos;s send button yourself.</li>
+            <li>Copy the conversation address from your browser (<code>{INBOX_URL_PREFIX}&#123;conversation_id&#125;</code>), paste it next to <strong>I sent it</strong>, and confirm. The app stores the link so you can open it later to check for a reply, enforces your daily cap and gap, and starts the follow-up timer.</li>
           </ol>
           <p className="mt-2 text-xs text-slate-500">If Volleybox shows a CAPTCHA, a sending limit or restricts your account, stop and report it below: the app pauses everything. It never works around those controls. If an athlete does not accept messages from you, use &quot;Can&apos;t message&quot;.</p>
           <form action={platformLimitAction} className="mt-3 flex flex-wrap gap-2">
@@ -104,7 +105,7 @@ export default async function OutreachPage({ searchParams }: { searchParams: Pro
               {m.status === "approved" && !assisted && <div className="mt-1">Due {fmtDate(m.send_after)}</div>}
               {m.attempts > 0 && <div className="mt-1">Attempts: {m.attempts}/{m.max_attempts}</div>}
             </td>
-            <td className="w-40 px-3 py-2">
+            <td className="w-52 px-3 py-2">
               <div className="flex flex-col gap-1">
                 {m.status === "pending_approval" && (
                   <form action={approveAction}><input type="hidden" name="ids" value={m.id} /><input type="hidden" name="returnTo" value={here} /><button className={`${btn.primary} ${btn.small} w-full`}>Approve</button></form>
@@ -113,7 +114,11 @@ export default async function OutreachPage({ searchParams }: { searchParams: Pro
                   <>
                     <a className={`${btn.secondary} ${btn.small} w-full`} href={m.profile_url} target="_blank" rel="noreferrer">Open profile</a>
                     <CopyButton text={m.body} />
-                    <form action={confirmSentAction}><input type="hidden" name="id" value={m.id} /><input type="hidden" name="returnTo" value={here} /><button className={`${btn.primary} ${btn.small} w-full`}>I sent it</button></form>
+                    <form action={confirmSentAction} className="flex flex-col gap-1">
+                      <input type="hidden" name="id" value={m.id} /><input type="hidden" name="returnTo" value={here} />
+                      <input name="conversation" placeholder="volleybox.net/pm/inbox/..." aria-label="Volleybox conversation link" className={`${input} !py-1 text-xs`} />
+                      <button className={`${btn.primary} ${btn.small} w-full`}>I sent it</button>
+                    </form>
                     <form action={cannotMessageAction}><input type="hidden" name="id" value={m.id} /><input type="hidden" name="returnTo" value={here} /><input type="hidden" name="reason" value="Volleybox does not allow messaging this athlete." /><button className={`${btn.secondary} ${btn.small} w-full`}>Can&apos;t message</button></form>
                   </>
                 )}

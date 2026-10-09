@@ -12,9 +12,10 @@ import { getSettings, updateSettings, type Settings } from "@/lib/settings";
 import { SESSION_COOKIE, sessionSecret, signSession } from "@/lib/session";
 import { parseAthleteCsv } from "@/modules/discovery/adapters/csv";
 import { ingestAthletes } from "@/modules/discovery/service";
+import { importRankingPass, setPassStatus } from "@/modules/discovery/passes";
 import { markMovedOffPlatform, recordGuardianConsent, updateLead, type LeadStatus } from "@/modules/leads/service";
 import {
-  approveMessages, cancelMessage, confirmManualSend, planFollowups, planIntros, reportCannotMessage, reportPlatformLimit,
+  approveMessages, attachConversation, cancelMessage, confirmManualSend, planFollowups, planIntros, reportCannotMessage, reportPlatformLimit,
   restoreAthlete, resumeSending, updateDraftBody,
 } from "@/modules/messaging/service";
 import { liftSuppression, suppressAthlete, suppressProfileUrl } from "@/modules/messaging/suppression";
@@ -172,8 +173,32 @@ export async function runJobsNowAction(form: FormData) {
 
 export async function confirmSentAction(form: FormData) {
   await run(returnPath(form, "/outreach?tab=approved"), async () => {
-    await confirmManualSend(getDb(), str(form, "id"));
+    await confirmManualSend(getDb(), str(form, "id"), new Date(), str(form, "conversation"));
     return "Recorded as sent.";
+  });
+}
+
+export async function attachConversationAction(form: FormData) {
+  const id = str(form, "athleteId");
+  await run(returnPath(form, `/athletes/${id}`), async () => {
+    await attachConversation(getDb(), id, str(form, "conversation"));
+    return "Conversation link saved.";
+  });
+}
+
+export async function importPassAction(form: FormData) {
+  const id = str(form, "passId");
+  await run(`/discovery/import?pass=${encodeURIComponent(id)}`, async () => {
+    const r = await importRankingPass(getDb(), id, { text: str(form, "text"), position: str(form, "position") || null });
+    return `Pass import: ${r.inserted} new, ${r.duplicates} duplicates, ${r.skippedCriteria} outside criteria, ${r.skippedSuppressed} suppressed, ${r.invalid + r.errors.length} unreadable line(s).`;
+  });
+}
+
+export async function setPassStatusAction(form: FormData) {
+  await run(returnPath(form, "/discovery"), async () => {
+    const status = str(form, "status");
+    if (status !== "pending" && status !== "done") throw new Error("Invalid status");
+    await setPassStatus(getDb(), str(form, "id"), status);
   });
 }
 
@@ -214,7 +239,7 @@ export async function saveDraftAction(form: FormData) {
 
 export async function logReplyAction(form: FormData) {
   const athleteId = str(form, "athleteId");
-  await run(`/athletes/${athleteId}`, async () => {
+  await run(returnPath(form, `/athletes/${athleteId}`), async () => {
     const db = getDb();
     const [conv] = await db.query<{ adapter: string; thread_id: string | null }>(
       "select adapter, thread_id from conversations where athlete_id = $1", [athleteId]);

@@ -1,12 +1,14 @@
-import { importCsvAction, runDiscoveryNow, saveDiscoverySettings } from "../actions";
+import { importCsvAction, runDiscoveryNow, saveDiscoverySettings, setPassStatusAction } from "../actions";
 import { Flash } from "@/components/flash";
 import { ModeBanner } from "@/components/mode-banner";
-import { btn, Card, CheckGroup, Field, fmtDate, input, PageHeader, StatusBadge, Table } from "@/components/ui";
-import { COUNTRIES } from "@/lib/countries";
+import { Badge, btn, Card, CheckGroup, Field, fmtDate, input, PageHeader, StatusBadge, Table } from "@/components/ui";
+import { COUNTRIES, countryByCode } from "@/lib/countries";
 import { getDb } from "@/lib/db";
 import { getVolleyboxMode } from "@/lib/env";
 import { getSettings } from "@/lib/settings";
 import { POSITIONS } from "@/modules/discovery/normalize";
+import { syncPasses } from "@/modules/discovery/passes";
+import { RANKING_URL } from "@/modules/volleybox/interfaces";
 
 export const dynamic = "force-dynamic";
 const YEARS = [2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012];
@@ -16,6 +18,7 @@ export default async function DiscoveryPage({ searchParams }: { searchParams: Pr
   const db = getDb();
   const assisted = getVolleyboxMode().mode === "assisted";
   const s = await getSettings(db);
+  const passes = assisted ? await syncPasses(db) : [];
   const runs = await db.query<{
     id: string; status: string; adapter: string; found: number; inserted: number; duplicates: number;
     skipped_suppressed: number; skipped_criteria: number; error: string | null; started_at: Date;
@@ -73,6 +76,36 @@ export default async function DiscoveryPage({ searchParams }: { searchParams: Pr
           </tr>
         ))}
       </Table></>}
+
+      {assisted && (
+        <Card title="Ranking passes" className="mt-8">
+          <p className="mb-3 text-sm text-slate-600">
+            Athlete discovery on Volleybox is the <a className="underline" href={RANKING_URL} target="_blank" rel="noreferrer">player ranking page</a>, which
+            filters by birthdate, country, position, tournament and height. Men&apos;s and women&apos;s players are separate sections. The app cannot read that page for you
+            (no API, and automated access is not authorized), so each combination of your criteria becomes one pass: set the filters on Volleybox, review the players, then paste the ones you want.
+          </p>
+          <Table head={["Pass", "Section", "Status", "Imported", "Duplicates", ""]} empty={passes.length ? undefined : "Select at least one birth year, country and gender above and save to create passes."}>
+            {passes.map((p) => (
+              <tr key={p.id}>
+                <td className="px-3 py-2 font-medium">Born {p.birth_year} - {countryByCode(p.country)?.name ?? p.country}</td>
+                <td className="px-3 py-2">{p.gender === "female" ? "Women" : "Men"}</td>
+                <td className="px-3 py-2"><Badge tone={p.status === "done" ? "green" : "gray"}>{p.status === "done" ? "done" : "to do"}</Badge></td>
+                <td className="px-3 py-2">{p.imported}</td>
+                <td className="px-3 py-2">{p.duplicates}</td>
+                <td className="px-3 py-2">
+                  <div className="flex gap-1">
+                    <a className={`${btn.primary} ${btn.small}`} href={`/discovery/import?pass=${p.id}`}>Open pass</a>
+                    <form action={setPassStatusAction}>
+                      <input type="hidden" name="id" value={p.id} /><input type="hidden" name="status" value={p.status === "done" ? "pending" : "done"} />
+                      <button className={`${btn.secondary} ${btn.small}`}>{p.status === "done" ? "Reopen" : "Mark done"}</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </Table>
+        </Card>
+      )}
 
       <Card title="Import athletes (CSV)" className="mt-8">
         <form action={importCsvAction} className="space-y-3">

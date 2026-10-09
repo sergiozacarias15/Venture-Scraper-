@@ -1,6 +1,7 @@
 import { Badge, Card, Notice, PageHeader, Table } from "@/components/ui";
 import { getVolleyboxMode } from "@/lib/env";
 import { AUTOMATION_REQUIREMENTS, capabilities } from "@/lib/integrations";
+import { SURFACES } from "@/modules/volleybox/interfaces";
 
 export const dynamic = "force-dynamic";
 const TONE = { working: "green", assisted: "blue", demo: "amber", unavailable: "gray" } as const;
@@ -16,6 +17,22 @@ export default function IntegrationsPage() {
       ) : (
         <Notice tone="amber"><strong>Demo mode.</strong> Synthetic athletes and fake sends. Switch VOLLEYBOX_MODE off (or to assisted) for real work.</Notice>
       )}
+      <Card title="Volleybox surfaces this app is built around" className="mb-6">
+        <div className="space-y-4">
+          {SURFACES.map((x) => (
+            <div key={x.id} className="text-sm">
+              <div className="flex flex-wrap items-center gap-2">
+                <a className="font-medium underline" href={x.url} target="_blank" rel="noreferrer">{x.name}</a>
+                <Badge tone="green">exists (operator-confirmed)</Badge>
+                <Badge tone="gray">automation not authorized</Badge>
+                <Badge tone="gray">automation untested</Badge>
+              </div>
+              <p className="mt-1 text-slate-600"><strong>What we know:</strong> {x.confirmed}</p>
+              <p className="text-slate-600"><strong>How the app uses it today:</strong> {x.appSupport}</p>
+            </div>
+          ))}
+        </div>
+      </Card>
       <Table head={["Capability", "Status", "Details"]}>
         {capabilities().map((c) => (
           <tr key={c.name}>

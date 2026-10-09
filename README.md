@@ -75,13 +75,14 @@ To try it with synthetic data set `VOLLEYBOX_MODE=demo`.
 | Capability | Status |
 |---|---|
 | Athlete database, filters, dedupe, CSV import | **Working** (real data you import) |
+| Discovery passes for the ranking page (`volleybox.net/players/ranking`): one pass per birth year x country x section; paste reviewed players; criteria, dedupe and suppression applied | **Working** (the reading of the page is manual) |
 | Draft messages (EN/IT/ES/PT), minor safeguards, approval, editing | **Working** |
 | Ready-to-send list: open profile, copy text, confirm "I sent it"; daily cap, minimum gap, suppression/duplicate/age checks on confirm; pause when Volleybox limits you | **Working** (the send itself is manual) |
-| Replies | **Manual**: paste/log each reply on the athlete page; classified (Interested / Question / Not interested), suppression, follow-up stop, alerts, leads |
+| Conversation links (`volleybox.net/pm/inbox/{id}`) stored per athlete, unique per athlete, used to open the thread and route replies | **Working** (you paste the link; the app never opens Volleybox itself) |
+| Replies | **Manual**: Inbox -> *To check on Volleybox* lists each open conversation; paste the reply back; classified (Interested / Question / Not interested), suppression, follow-up stop, alerts, leads |
 | Follow-ups and No Response | **Working** (follow-up drafts join the ready-to-send list) |
 | Lead pipeline, "moved to WhatsApp/Instagram", guardian gate for minors | **Working** |
-| Automatic discovery on Volleybox | **Unavailable** (no API; scraping prohibited). Demo mode only |
-| Automatic sending / reply capture on Volleybox | **Unavailable** |
+| Automatic reading of the ranking page; automatic sending in the PM inbox; automatic reply capture | **Unavailable**: the surfaces exist, but automated access is not authorized and nothing here has been tested against it |
 | Pipedrive sync | **Not connected** (columns + mapper only) |
 | Browser automation of Volleybox, AI scouting, automatic sales conversations | **Not built** |
 
@@ -90,10 +91,10 @@ The same table is at `/integrations`.
 ## Recommended workflow (assisted)
 
 1. **Settings**: set your name, daily cap and minimum gap (stay conservative; Volleybox publishes no limits).
-2. **Discovery**: choose birth years, gender, nationalities, positions. Review candidates in your own Volleybox account and import the ones you intend to contact (CSV; only data you are permitted to use). Imports are filtered by your criteria and deduped; suppressed profiles are skipped.
+2. **Discovery**: choose birth years, gender (the Men/Women section), countries, positions and save. Each combination becomes a pass. Open a pass, set the same filters on the Volleybox ranking page, review the players, and paste the ones you want (profile link + name). Birth year, country and section are recorded from the filters you applied and marked operator-asserted. CSV import remains available.
 3. **Outreach -> Awaiting approval**: review drafts (potential minors always need your explicit approval).
-4. **Outreach -> Ready to send**: for each message click *Open profile*, *Copy message*, send it in Volleybox, then *I sent it*. Use *Can't message* if the athlete does not accept your messages, or *Volleybox limited me* if you see a CAPTCHA/limit (sending pauses 24h).
-5. **Replies**: on the athlete page, *Log a reply*. Interested athletes become leads with an alert; decliners are suppressed and follow-ups stop.
+4. **Outreach -> Ready to send**: for each message click *Open profile*, *Copy message*, paste it into Volleybox's composer and press its send button, copy the `/pm/inbox/{id}` address, paste it next to *I sent it* and confirm. Use *Can't message* if the athlete does not accept your messages, or *Volleybox limited me* if you see a CAPTCHA/limit (sending pauses 24h).
+5. **Replies**: Inbox -> *To check on Volleybox* opens each stored conversation; paste any reply with *Log reply*. Interested athletes become leads with an alert; decliners are suppressed and follow-ups stop.
 6. **Leads**: continue personally on Instagram/WhatsApp and record it (minors need recorded guardian involvement first).
 
 ## How to get to real automation
