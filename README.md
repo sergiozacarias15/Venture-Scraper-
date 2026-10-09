@@ -3,19 +3,32 @@
 Discovery and outreach automation for recruiting international volleyball athletes to Venture Sports USA.
 Next.js (App Router) + TypeScript + Tailwind + Supabase (Postgres).
 
-> **Compliance first.** The app only talks to Volleybox through *adapters* backed by an authorized
-> integration. There is no scraping, no login automation and no CAPTCHA handling. Without an
-> authorized integration it runs on **mock adapters** (synthetic athletes, nothing delivered) and says so
-> on every page. If Volleybox answers with a rate limit, CAPTCHA or account restriction, sending pauses
-> and you are alerted; the app never retries around it.
+> **Honest status.** Volleybox publishes no API, data licence or partner program (see "Research findings"), and its
+> Terms prohibit scraping or harvesting data without permission. So this app does **not** automate Volleybox.
+> It is an **assisted-outreach** tool: you import athletes you are entitled to use, the app drafts and queues
+> personalized messages with caps and safeguards, **you send each one on Volleybox** and confirm it here, and
+> everything after that (replies, suppression, follow-ups, leads) is tracked. `VOLLEYBOX_MODE=demo` swaps in
+> synthetic data for trying the app.
+
+## Research findings (Oct 2026)
+
+Checked: volleybox.net home, `/terms`, `/contact`, `/what-is-volleybox`, `robots.txt`, the public change log, and web search for an API, developer, data-licence or partner program.
+
+- **No official API, developer portal, data licence or partner integration is published.** Contact is a web form / `admin@volleybox.net`.
+  This does not prove none exists privately; the only way to find out is to ask (draft in `docs/volleybox-access-request.md`).
+- **Terms of Use section 8**: users may not "scrape or harvest data without permission" or "attempt to bypass security measures".
+  `robots.txt` allows crawling, but the Terms still govern. Pages beyond the home page also sit behind a Cloudflare bot challenge for scripted requests; this app does not and will not try to get around it.
+- **Messaging**: Volleybox has member-to-member private messages. Recipients control who may message them by user group (fans, players, scouts, coaches) and can block individual users, so some athletes cannot be messaged by you at all. No messaging API is documented and no send limits are published.
+- **Minors**: the Terms allow users aged 13-17 only under parental/guardian supervision, which matters for the 2008-2010 birth years.
+- Unrelated "volleyball API" vendors (livescore/fixtures data) exist, but they do not provide Volleybox player-profile or messaging access.
 
 ## What it does
 
 | Area | Module | Notes |
 |---|---|---|
-| Discovery | `src/modules/discovery` | Criteria (birth years, gender, nationality, position) chosen in the dashboard; scheduled job pulls pages from the adapter, normalizes, filters strictly, dedupes on profile URL / Volleybox id, skips suppressed profiles, never changes the status of already-known athletes. CSV import for authorized exports. |
-| Messaging | `src/modules/messaging` | EN/IT/ES/PT templates (language = athlete preference, else nationality default, else EN). Persistent queue with approval, schedule window, rolling-24h cap, minimum gap, retries with backoff, send-time re-checks (suppression, duplicates, age). |
-| Responses | `src/modules/responses` | Inbound via webhook / polling / manual logging. Multilingual rule-based classifier: Interested, Not interested, Question; "No response" is derived after the follow-up sequence goes unanswered. Declines and opt-outs auto-suppress and stop follow-ups. Interested replies create a lead and an alert. |
+| Discovery | `src/modules/discovery` | Criteria (birth years, gender, nationality, position) chosen in the dashboard. CSV import normalizes, filters strictly, dedupes on profile URL / Volleybox id, skips suppressed profiles, never changes the status of already-known athletes. A synthetic source exists for demo mode only. |
+| Messaging | `src/modules/messaging` | EN/IT/ES/PT templates (language = athlete preference, else nationality default, else EN). Persistent queue with approval, rolling-24h cap, minimum gap, send-time re-checks (suppression, duplicates, age). Assisted mode: manual send + confirm. Demo mode: automatic fake sends with retries/backoff. |
+| Responses | `src/modules/responses` | Replies are logged manually (no inbound feed exists). Multilingual rule-based classifier: Interested, Not interested, Question; "No response" is derived after the follow-up sequence goes unanswered. Declines and opt-outs auto-suppress and stop follow-ups. Interested replies create a lead and an alert. |
 | Leads | `src/modules/leads` | Lead pipeline, links to the Volleybox profile and conversation, "moved to WhatsApp/Instagram" tracking, Pipedrive-ready columns and payload mapper (no API calls yet). |
 | Jobs | `src/modules/jobs` | Postgres-backed queue (`jobs` table, `FOR UPDATE SKIP LOCKED`), dedupe keys, exponential retry, dead-letter + alert, stale-job recovery, recurring scheduler. |
 
@@ -46,9 +59,7 @@ npm run dev                       # http://localhost:3000
 npm run worker                    # optional: runs the job tick every 30s (or use "Run background jobs now")
 ```
 
-Walkthrough: **Settings** (set your sender name) -> **Discovery** (pick years/countries, "Run discovery now") ->
-**Outreach queue** ("Generate drafts now", review, approve) -> turn on **Send automatically** in Settings ->
-**Inbox** / athlete page ("Log a reply") -> **Leads**.
+To try it with synthetic data set `VOLLEYBOX_MODE=demo`.
 
 ## Deploy with Supabase
 
@@ -59,48 +70,37 @@ Walkthrough: **Settings** (set your sender name) -> **Discovery** (pick years/co
    Alternatives: `npm run worker` on any VM, or a Supabase `pg_cron` + `pg_net` call to the same endpoint.
 4. Sign in with `ADMIN_PASSWORD`. The dashboard fails closed in production if it is unset.
 
-## Working today vs. not connected
+## What works, what is manual, what is unavailable
 
 | Capability | Status |
 |---|---|
-| Athlete database, filters, dedupe, CSV import | **Working** |
-| Message drafting (EN/IT/ES/PT), minor safeguards, approval, edit | **Working** |
-| Queue: schedule window, caps, min gap, retries, duplicate + suppression checks | **Working** |
-| Reply classification, suppression/opt-outs, follow-up stop, alerts, leads, off-platform tracking | **Working** |
-| Background jobs, event log, signed webhook endpoint | **Working** |
-| Discovery search on Volleybox | **Mock only** (synthetic athletes) until live access is activated |
-| Sending messages through Volleybox | **Mock only** (recorded locally, nothing delivered) |
-| Receiving replies from Volleybox | **Mock / manual** until Volleybox pushes to the webhook or polling is implemented |
+| Athlete database, filters, dedupe, CSV import | **Working** (real data you import) |
+| Draft messages (EN/IT/ES/PT), minor safeguards, approval, editing | **Working** |
+| Ready-to-send list: open profile, copy text, confirm "I sent it"; daily cap, minimum gap, suppression/duplicate/age checks on confirm; pause when Volleybox limits you | **Working** (the send itself is manual) |
+| Replies | **Manual**: paste/log each reply on the athlete page; classified (Interested / Question / Not interested), suppression, follow-up stop, alerts, leads |
+| Follow-ups and No Response | **Working** (follow-up drafts join the ready-to-send list) |
+| Lead pipeline, "moved to WhatsApp/Instagram", guardian gate for minors | **Working** |
+| Automatic discovery on Volleybox | **Unavailable** (no API; scraping prohibited). Demo mode only |
+| Automatic sending / reply capture on Volleybox | **Unavailable** |
 | Pipedrive sync | **Not connected** (columns + mapper only) |
-| Instagram / WhatsApp | **Not connected by design** (you continue personally; the app records that you moved) |
 | Browser automation of Volleybox, AI scouting, automatic sales conversations | **Not built** |
 
-The same table, evaluated against the running configuration, is at `/integrations` in the dashboard.
+The same table is at `/integrations`.
 
-## Exactly what is required to activate live discovery and messaging
+## Recommended workflow (assisted)
 
-1. **Written authorization from Volleybox** for programmatic search and messaging (API / data-partner access). The app cannot check this; do not enable live mode without it.
-2. **Credentials**: `VOLLEYBOX_API_BASE_URL` and `VOLLEYBOX_API_KEY`, then `VOLLEYBOX_MODE=live`. All three are required; otherwise the app stays on mock adapters.
-3. **Match the adapters to Volleybox's real API.** Edit `src/modules/discovery/adapters/http.ts` (search endpoint, filters, response fields) and `src/modules/messaging/adapters/http.ts` (send endpoint, idempotency, inbound fetch, error codes). The current shapes are placeholders. Keep the mapping: rate limit -> `SendBlockedError("rate_limited")`, CAPTCHA -> `"captcha"`, restricted account -> `"account_restricted"`, 5xx/network -> `TransientSendError`, undeliverable recipient -> `PermanentSendError`. Update `tests/http-adapters.test.ts`.
-4. **Replies** (pick one): Volleybox pushes to `POST /api/webhooks/volleybox` signed with HMAC-SHA256 (`x-signature`, secret `VOLLEYBOX_WEBHOOK_SECRET`); or implement polling in `fetchReplies`; or keep logging replies manually.
-5. **Limits**: in Settings, set the daily cap, minimum gap and sending window at or below what Volleybox permits, and keep "Auto-approve adults" off until you have reviewed a batch of drafts.
-6. **Jobs running**: `CRON_SECRET` + Vercel Cron (`vercel.json`), or `npm run worker`.
-7. **Database**: apply `supabase/migrations`, set `SUPABASE_DB_URL`, `ADMIN_PASSWORD`.
-8. Start with a small test batch: run discovery, review drafts, approve a few, confirm delivery in Volleybox, then raise limits.
+1. **Settings**: set your name, daily cap and minimum gap (stay conservative; Volleybox publishes no limits).
+2. **Discovery**: choose birth years, gender, nationalities, positions. Review candidates in your own Volleybox account and import the ones you intend to contact (CSV; only data you are permitted to use). Imports are filtered by your criteria and deduped; suppressed profiles are skipped.
+3. **Outreach -> Awaiting approval**: review drafts (potential minors always need your explicit approval).
+4. **Outreach -> Ready to send**: for each message click *Open profile*, *Copy message*, send it in Volleybox, then *I sent it*. Use *Can't message* if the athlete does not accept your messages, or *Volleybox limited me* if you see a CAPTCHA/limit (sending pauses 24h).
+5. **Replies**: on the athlete page, *Log a reply*. Interested athletes become leads with an alert; decliners are suppressed and follow-ups stop.
+6. **Leads**: continue personally on Instagram/WhatsApp and record it (minors need recorded guardian involvement first).
 
-If Volleybox refuses programmatic access, the app is still useful: import authorized CSV exports, generate and review drafts, copy them to Volleybox yourself, and log replies for classification, suppression and lead tracking.
+## How to get to real automation
 
-## Connecting a real Volleybox integration
-
-Live mode needs **all** of: `VOLLEYBOX_MODE=live`, `VOLLEYBOX_API_BASE_URL`, `VOLLEYBOX_API_KEY`. Until then the app stays in mock mode.
-
-- `src/modules/discovery/adapters/http.ts` and `src/modules/messaging/adapters/http.ts` implement an *assumed* partner-API contract
-  (documented in the files). **Align the paths and field names with the contract in your agreement with Volleybox** - they are the
-  only two places to change. Policy responses (429 / captcha / restricted account) map to `SendBlockedError`, which pauses sending.
-- Inbound replies: push to `POST /api/webhooks/volleybox` (HMAC-SHA256 of the raw body in `x-signature`, secret `VOLLEYBOX_WEBHOOK_SECRET`)
-  and/or implement `fetchReplies` for polling.
-- Set `VOLLEYBOX_CONVERSATION_URL_TEMPLATE` (e.g. `https://volleybox.net/messages/{thread_id}`) for deep links to conversations.
-- Alerts: set `ALERT_WEBHOOK_URL` (Slack-compatible) to be pinged when an athlete is interested or sending is paused.
+Only through Volleybox. See `docs/volleybox-access-request.md`. If Volleybox grants access and documents it, implement `DiscoveryAdapter`
+(`src/modules/discovery/types.ts`) and `MessagingAdapter` (`src/modules/messaging/adapters/types.ts`) against *their* documentation, map their
+limit/CAPTCHA responses to `SendBlockedError`, and add a mode for it. The queue, caps, suppression, classification and lead logic already depend only on those interfaces.
 
 ## Pipedrive (prepared, not connected)
 

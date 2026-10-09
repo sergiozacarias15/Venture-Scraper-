@@ -151,25 +151,26 @@ describe("reply classifier", () => {
 });
 
 describe("volleybox mode", () => {
-  it("falls back to mock unless live is explicitly configured", () => {
-    expect(getVolleyboxMode({}).mode).toBe("mock");
-    expect(getVolleyboxMode({ VOLLEYBOX_MODE: "live" }).mode).toBe("mock");
-    expect(getVolleyboxMode({ VOLLEYBOX_MODE: "live", VOLLEYBOX_API_BASE_URL: "https://x", VOLLEYBOX_API_KEY: "k" }).mode).toBe("live");
+  it("defaults to assisted; there is no live mode", () => {
+    expect(getVolleyboxMode({}).mode).toBe("assisted");
+    expect(getVolleyboxMode({ VOLLEYBOX_MODE: "live" }).mode).toBe("assisted");
+    expect(getVolleyboxMode({ VOLLEYBOX_MODE: "demo" }).mode).toBe("demo");
   });
 });
 
-import { capabilities, liveActivationChecklist } from "@/lib/integrations";
+import { AUTOMATION_REQUIREMENTS, capabilities } from "@/lib/integrations";
 describe("integration status", () => {
-  it("reports mock sending until live is fully configured", () => {
-    const send = (env: Record<string, string>) => capabilities(env).find((c) => c.name.startsWith("Sending"))!.state;
-    expect(send({})).toBe("mock");
-    expect(send({ VOLLEYBOX_MODE: "live", VOLLEYBOX_API_BASE_URL: "https://x", VOLLEYBOX_API_KEY: "k" })).toBe("working");
-    expect(capabilities({}).find((c) => c.name.startsWith("Pipedrive"))!.state).toBe("not_connected");
+  const state = (env: Record<string, string>, prefix: string) => capabilities(env).find((c) => c.name.startsWith(prefix))!.state;
+  it("never claims automated Volleybox access", () => {
+    for (const env of [{}, { VOLLEYBOX_MODE: "demo" }, { VOLLEYBOX_MODE: "live", VOLLEYBOX_API_KEY: "k" }]) {
+      expect(capabilities(env).some((c) => c.state === "working" && /Volleybox/.test(c.name) && /(Sending|Discovering|Receiving)/.test(c.name))).toBe(false);
+    }
+    expect(AUTOMATION_REQUIREMENTS.join(" ")).toMatch(/Written permission/);
   });
-  it("always leaves the human-confirmed items unticked", () => {
-    const checks = liveActivationChecklist({ VOLLEYBOX_MODE: "live", VOLLEYBOX_API_BASE_URL: "https://x", VOLLEYBOX_API_KEY: "k", CRON_SECRET: "c" });
-    expect(checks.find((c) => c.key === "authorization")!.ok).toBe(false);
-    expect(checks.find((c) => c.key === "contract")!.ok).toBe(false);
-    expect(checks.find((c) => c.key === "mode")!.ok).toBe(true);
+  it("reports assisted sending by default and demo only when requested", () => {
+    expect(state({}, "Sending")).toBe("assisted");
+    expect(state({}, "Discovering")).toBe("unavailable");
+    expect(state({ VOLLEYBOX_MODE: "demo" }, "Sending")).toBe("demo");
+    expect(state({}, "Pipedrive")).toBe("unavailable");
   });
 });

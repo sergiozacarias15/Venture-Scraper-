@@ -24,7 +24,7 @@ export type DiscoveredAthlete = {
 
 export type DiscoveryPage = { athletes: DiscoveredAthlete[]; nextCursor: string | null };
 
-/** A source of athlete profiles that the operator is authorized to use. */
+/** A source of athlete profiles the operator is authorized to use. Only the demo source exists today. */
 export interface DiscoveryAdapter {
   id: string;
   /** false for mock/offline sources; nothing real is contacted. */

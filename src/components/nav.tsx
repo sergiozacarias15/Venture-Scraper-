@@ -6,7 +6,7 @@ const LINKS = [
   ["/", "Dashboard"],
   ["/discovery", "Discovery"],
   ["/athletes", "Athletes"],
-  ["/outreach", "Outreach queue"],
+  ["/outreach", "Outreach"],
   ["/inbox", "Inbox"],
   ["/leads", "Leads"],
   ["/suppressions", "Suppression list"],
@@ -32,8 +32,8 @@ export async function Nav() {
       <div className="px-4 py-4">
         <div className="text-sm font-semibold">Venture Sports USA</div>
         <div className="text-xs text-slate-500">Volleybox outreach</div>
-        <div className={`mt-2 inline-block rounded px-2 py-0.5 text-xs font-medium ${mode.mode === "live" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
-          {mode.mode === "live" ? "Live integration" : "Mock mode"}
+        <div className={`mt-2 inline-block rounded px-2 py-0.5 text-xs font-medium ${mode.mode === "assisted" ? "bg-sky-100 text-sky-800" : "bg-amber-100 text-amber-800"}`}>
+          {mode.mode === "assisted" ? "Assisted mode" : "Demo mode"}
         </div>
       </div>
       <nav className="flex flex-wrap gap-1 px-2 pb-3 lg:flex-col">

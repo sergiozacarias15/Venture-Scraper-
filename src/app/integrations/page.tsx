@@ -1,24 +1,21 @@
 import { Badge, Card, Notice, PageHeader, Table } from "@/components/ui";
 import { getVolleyboxMode } from "@/lib/env";
-import { capabilities, liveActivationChecklist } from "@/lib/integrations";
+import { AUTOMATION_REQUIREMENTS, capabilities } from "@/lib/integrations";
 
 export const dynamic = "force-dynamic";
-const TONE = { working: "green", mock: "amber", not_connected: "gray" } as const;
-const LABEL = { working: "Working", mock: "Mock only", not_connected: "Not connected" } as const;
+const TONE = { working: "green", assisted: "blue", demo: "amber", unavailable: "gray" } as const;
+const LABEL = { working: "Working", assisted: "Assisted (manual step)", demo: "Demo only", unavailable: "Unavailable" } as const;
 
 export default function IntegrationsPage() {
-  const mode = getVolleyboxMode();
-  const checks = liveActivationChecklist();
+  const mode = getVolleyboxMode().mode;
   return (
     <>
-      <PageHeader title="Integrations" description="What works today, what is mocked, and exactly what is required to go live with Volleybox." />
-      {mode.mode === "mock" ? (
-        <Notice tone="amber"><strong>Live Volleybox access is not active.</strong> {mode.reason} Discovery returns synthetic athletes and &quot;sent&quot; messages are only recorded locally.</Notice>
+      <PageHeader title="Integrations" description="What works, what needs your hands, and what is not possible today." />
+      {mode === "assisted" ? (
+        <Notice tone="blue"><strong>Assisted mode.</strong> Volleybox offers no public API, partner program or data licence that we could find, so nothing is automated against Volleybox. You import athletes and send each approved message yourself in Volleybox, then confirm it here.</Notice>
       ) : (
-        <Notice tone="green"><strong>Live mode is active.</strong> Messages are sent through the configured Volleybox integration within your limits.</Notice>
+        <Notice tone="amber"><strong>Demo mode.</strong> Synthetic athletes and fake sends. Switch VOLLEYBOX_MODE off (or to assisted) for real work.</Notice>
       )}
-
-      <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">Capabilities</h2>
       <Table head={["Capability", "Status", "Details"]}>
         {capabilities().map((c) => (
           <tr key={c.name}>
@@ -28,20 +25,10 @@ export default function IntegrationsPage() {
           </tr>
         ))}
       </Table>
-
-      <Card title="Checklist to activate live discovery and messaging" className="mt-8">
-        <ol className="space-y-3 text-sm">
-          {checks.map((c, i) => (
-            <li key={c.key} className="flex gap-3">
-              <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ${c.ok ? "bg-emerald-600 text-white" : "bg-slate-200 text-slate-600"}`}>{c.ok ? "✓" : i + 1}</span>
-              <div>
-                <div className="font-medium">{c.label} {!c.required && <span className="font-normal text-slate-500">(optional)</span>}</div>
-                <div className="text-slate-600">{c.how}</div>
-              </div>
-            </li>
-          ))}
+      <Card title="What would be required to automate any of this" className="mt-8">
+        <ol className="list-decimal space-y-2 pl-5 text-sm text-slate-700">
+          {AUTOMATION_REQUIREMENTS.map((r) => <li key={r}>{r}</li>)}
         </ol>
-        <p className="mt-4 text-xs text-slate-500">Items without a tick that the app cannot verify (authorization, API contract, limits) must be confirmed by you.</p>
       </Card>
     </>
   );

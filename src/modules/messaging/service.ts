@@ -147,6 +147,35 @@ async function preflight(db: Db, m: QueuedMessage, minContactAge: number, now: D
   return null;
 }
 
+
+type SentInfo = { externalId: string; threadId: string; conversationUrl?: string };
+
+/** Persists a completed send: message, conversation (thread, follow-up count) and athlete status. */
+async function recordSent(
+  db: Db, m: QueuedMessage, a: AthleteRow, sent: SentInfo,
+  adapter: Pick<MessagingAdapter, "id" | "conversationUrl">, now: Date,
+) {
+  await db.tx(async (tx) => {
+    await tx.query("update messages set status='sent', sent_at=$2, external_id=$3, adapter=$4, last_error=null, updated_at=now() where id=$1",
+      [m.id, now, sent.externalId, adapter.id]);
+    const [c] = await tx.query<{ id: string }>(
+      `insert into conversations (athlete_id, adapter, thread_id, conversation_url, last_outbound_at, followups_sent)
+       values ($1,$2,$3,$4,$5,$6)
+       on conflict (athlete_id) do update set thread_id = coalesce(excluded.thread_id, conversations.thread_id),
+         conversation_url = coalesce(excluded.conversation_url, conversations.conversation_url),
+         last_outbound_at = excluded.last_outbound_at,
+         followups_sent = conversations.followups_sent + $6, updated_at = now()
+       returning id`,
+      [a.id, adapter.id, sent.threadId, sent.conversationUrl ?? adapter.conversationUrl(sent.threadId, a.profile_url), now, m.kind === "followup" ? 1 : 0],
+    );
+    await tx.query("update messages set conversation_id = $2 where id = $1", [m.id, c.id]);
+    await tx.query(
+      "update athletes set status = case when status in ('queued','discovered') then 'contacted' else status end, first_contacted_at = coalesce(first_contacted_at, $2), updated_at = now() where id = $1",
+      [a.id, now],
+    );
+  });
+}
+
 export type SendRunResult = { sent: number; cancelled: number; failed: number; stoppedReason?: string };
 
 const MAX_PER_RUN = 50;
@@ -199,25 +228,7 @@ export async function sendDueMessages(db: Db, adapter: MessagingAdapter, now = n
         language: m.language,
         threadId: conv?.thread_id ?? null,
       });
-      await db.tx(async (tx) => {
-        await tx.query("update messages set status='sent', sent_at=$2, external_id=$3, adapter=$4, last_error=null, updated_at=now() where id=$1",
-          [m.id, now, sent.externalId, adapter.id]);
-        const [c] = await tx.query<{ id: string }>(
-          `insert into conversations (athlete_id, adapter, thread_id, conversation_url, last_outbound_at, followups_sent)
-           values ($1,$2,$3,$4,$5,$6)
-           on conflict (athlete_id) do update set thread_id = coalesce(excluded.thread_id, conversations.thread_id),
-             conversation_url = coalesce(excluded.conversation_url, conversations.conversation_url),
-             last_outbound_at = excluded.last_outbound_at,
-             followups_sent = conversations.followups_sent + $6, updated_at = now()
-           returning id`,
-          [a.id, adapter.id, sent.threadId, sent.conversationUrl ?? adapter.conversationUrl(sent.threadId, a.profile_url), now, m.kind === "followup" ? 1 : 0],
-        );
-        await tx.query("update messages set conversation_id = $2 where id = $1", [m.id, c.id]);
-        await tx.query(
-          "update athletes set status = case when status in ('queued','discovered') then 'contacted' else status end, first_contacted_at = coalesce(first_contacted_at, $2), updated_at = now() where id = $1",
-          [a.id, now],
-        );
-      });
+      await recordSent(db, m, a, sent, adapter, now);
       result.sent++;
     } catch (err) {
       if (err instanceof SendBlockedError) {
@@ -258,6 +269,82 @@ export async function sendDueMessages(db: Db, adapter: MessagingAdapter, now = n
     await logEvent(db, "info", "outreach", `Send run: ${result.sent} sent, ${result.cancelled} cancelled, ${result.failed} failed.`);
   }
   return result;
+}
+
+/** Messages the operator should send by hand on Volleybox (assisted mode), oldest first. */
+export async function listReadyToSend(db: Db) {
+  return db.query<{
+    id: string; athlete_id: string; kind: string; language: string; body: string; full_name: string;
+    profile_url: string; nationality: string | null; birth_year: number | null; approved_at: Date | null;
+  }>(
+    `select m.id, m.athlete_id, m.kind, m.language, m.body, a.full_name, a.profile_url, a.nationality, a.birth_year, m.approved_at
+     from messages m join athletes a on a.id = m.athlete_id
+     where m.direction = 'out' and m.status = 'approved' order by (m.kind = 'intro') asc, m.created_at limit 200`,
+  );
+}
+
+/**
+ * The operator confirms they sent an approved message on Volleybox. The same safeguards as automatic
+ * sending apply (suppression, duplicates, age, daily cap, minimum gap, pause); the sending window is not
+ * enforced because a human is choosing when to send.
+ */
+export async function confirmManualSend(db: Db, messageId: string, now = new Date()) {
+  const s = await getSettings(db);
+  const [stats] = await db.query<{ n: number; last: Date | null }>(
+    `select count(*) filter (where sent_at > $1)::int as n, max(sent_at) as last from messages where direction = 'out' and status = 'sent'`,
+    [addDays(now, -1)],
+  );
+  const gate = evaluateSendGate({
+    now,
+    settings: { ...s, outreach_enabled: true, window_start_hour: 0, window_end_hour: 24, send_days: [1, 2, 3, 4, 5, 6, 7] },
+    sentLast24h: stats.n,
+    lastSentAt: stats.last,
+  });
+  if (!gate.allowed) throw new Error(gate.reason);
+
+  const [m] = await db.query<QueuedMessage>(
+    `update messages set status = 'sending', attempts = attempts + 1, updated_at = now()
+     where id = $1 and direction = 'out' and status = 'approved'
+     returning id, athlete_id, conversation_id, kind, body, language, attempts, max_attempts, requires_approval, approved_at`,
+    [messageId],
+  );
+  if (!m) throw new Error("This message is no longer waiting to be sent.");
+  const block = await preflight(db, m, s.min_contact_age, now);
+  if (block) {
+    const revert = block === "needs_approval";
+    await db.query("update messages set status = $2, attempts = attempts - 1, last_error = $3, updated_at = now() where id = $1",
+      [m.id, revert ? "pending_approval" : "cancelled", revert ? null : `Cancelled at send time: ${block}`]);
+    throw new Error(revert ? "This message still needs approval." : `Not sent: ${block}. The message was cancelled.`);
+  }
+  const [a] = await db.query<AthleteRow>("select * from athletes where id = $1", [m.athlete_id]);
+  const channel = { id: "assisted", conversationUrl: (_t: string | null, url: string) => url };
+  await recordSent(db, m, a, { externalId: `manual-${m.id}`, threadId: `manual-${a.id}` }, channel, now);
+  await logEvent(db, "info", "outreach", "Operator confirmed a message was sent on Volleybox.", { athleteId: a.id });
+}
+
+/** Volleybox does not let the operator message this athlete (blocked, restricted by the athlete, etc.). */
+export async function reportCannotMessage(db: Db, messageId: string, reason: string) {
+  const rows = await db.query<{ athlete_id: string }>(
+    "update messages set status = 'failed', last_error = $2, updated_at = now() where id = $1 and status = 'approved' returning athlete_id",
+    [messageId, reason || "Volleybox does not allow messaging this athlete."],
+  );
+  if (rows[0]) {
+    await db.query("update athletes set status = 'unreachable', updated_at = now() where id = $1 and status in ('queued','contacted')", [rows[0].athlete_id]);
+  }
+}
+
+/** Volleybox showed a CAPTCHA, a limit or an account restriction. Pause everything; do not push through it. */
+export async function reportPlatformLimit(db: Db, note: string, now = new Date()) {
+  await updateSettings(db, {
+    sending_paused_until: addDays(now, 1),
+    sending_paused_reason: `reported by operator: ${note || "Volleybox limited the account"}`,
+  });
+  await createAlert(db, {
+    kind: "sending_paused",
+    title: "Sending paused: Volleybox limit reported",
+    body: `${note || "Volleybox limited the account."} Paused for 24 hours; resume manually once it is resolved.`,
+  });
+  await logEvent(db, "warn", "outreach", `Operator reported a Volleybox limit: ${note}`);
 }
 
 export async function approveMessages(db: Db, ids: string[], by = "operator") {

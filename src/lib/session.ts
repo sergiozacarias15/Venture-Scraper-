@@ -32,8 +32,3 @@ export async function verifySession(secret: string, token: string | undefined, n
   if (!exp || !sig || Number(exp) < now) return false;
   return constantTimeEqual(sig, await hmac(secret, exp));
 }
-
-export async function verifyHmacSignature(secret: string, body: string, signature: string | null) {
-  if (!secret || !signature) return false;
-  return constantTimeEqual(signature.replace(/^sha256=/, ""), await hmac(secret, body));
-}

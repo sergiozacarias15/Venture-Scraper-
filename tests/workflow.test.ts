@@ -317,3 +317,68 @@ describe("lead management", () => {
     expect((await one("select status from leads where athlete_id=$1", [id])).status).toBe("moved_instagram");
   });
 });
+
+describe("assisted mode (operator sends on Volleybox)", () => {
+  async function ready(over: Parameters<typeof seedAthlete>[1] = {}) {
+    const id = await seedAthlete(db, over);
+    await planIntros(db, NOW);
+    const m = await one<{ id: string }>("select id from messages where athlete_id=$1", [id]);
+    return { id, messageId: m.id };
+  }
+
+  it("does not send automatically; lists approved messages for the operator", async () => {
+    const { messageId } = await ready();
+    const { AssistedMessagingAdapter } = await import("@/modules/messaging/adapters/assisted");
+    const { HANDLERS } = await import("@/modules/jobs/handlers");
+    const res = await HANDLERS["outreach.send"]({ db, deps: { discovery: null, messaging: new AssistedMessagingAdapter() }, now: NOW, payload: {} });
+    expect(res).toMatchObject({ skipped: expect.stringContaining("assisted") });
+    const { listReadyToSend } = await import("@/modules/messaging/service");
+    expect((await listReadyToSend(db)).map((r) => r.id)).toEqual([messageId]);
+  });
+
+  it("confirming a send records the conversation so replies and follow-ups work", async () => {
+    const { id, messageId } = await ready();
+    const { confirmManualSend } = await import("@/modules/messaging/service");
+    await confirmManualSend(db, messageId, NOW);
+    expect(await one("select status, adapter from messages where id=$1", [messageId])).toMatchObject({ status: "sent", adapter: "assisted" });
+    expect((await one("select status from athletes where id=$1", [id])).status).toBe("contacted");
+    expect((await planFollowups(db, days(5))).planned).toBe(1);
+    const r = await ingestInbound(db, "assisted", { externalId: "m1", threadId: `manual-${id}`, body: "Sì, mi interessa", receivedAt: minutes(30) });
+    expect(r).toMatchObject({ status: "stored", category: "interested" });
+  });
+
+  it("cannot confirm twice and enforces suppression, cap, gap and pause", async () => {
+    const { confirmManualSend, reportPlatformLimit } = await import("@/modules/messaging/service");
+    const a = await ready();
+    const b = await ready();
+    const c = await ready();
+    await updateSettings(db, { daily_cap: 2, min_interval_seconds: 60 });
+    await confirmManualSend(db, a.messageId, NOW);
+    await expect(confirmManualSend(db, a.messageId, minutes(5))).rejects.toThrow(/no longer waiting/);
+    await expect(confirmManualSend(db, b.messageId, new Date(NOW.getTime() + 10_000))).rejects.toThrow(/Minimum interval/);
+    await confirmManualSend(db, b.messageId, minutes(2));
+    await expect(confirmManualSend(db, c.messageId, minutes(10))).rejects.toThrow(/Daily cap/);
+    await updateSettings(db, { daily_cap: 10 });
+    await reportPlatformLimit(db, "CAPTCHA shown", minutes(11));
+    await expect(confirmManualSend(db, c.messageId, minutes(12))).rejects.toThrow(/paused/);
+    expect((await one("select count(*)::int n from alerts where kind='sending_paused'")).n).toBe(1);
+  });
+
+  it("refuses to confirm for suppressed athletes or unapproved minors", async () => {
+    const { confirmManualSend } = await import("@/modules/messaging/service");
+    const blocked = await ready();
+    await db.query("insert into suppressions (profile_url, reason) select profile_url, 'manual' from athletes where id=$1", [blocked.id]);
+    await expect(confirmManualSend(db, blocked.messageId, NOW)).rejects.toThrow(/suppression/);
+    expect((await one("select status from messages where id=$1", [blocked.messageId])).status).toBe("cancelled");
+    const minor = await ready({ birthYear: 2009 });
+    await expect(confirmManualSend(db, minor.messageId, NOW)).rejects.toThrow(/no longer waiting/);
+  });
+
+  it("marks athletes that Volleybox will not let you message as unreachable", async () => {
+    const { reportCannotMessage } = await import("@/modules/messaging/service");
+    const { id, messageId } = await ready();
+    await reportCannotMessage(db, messageId, "Athlete does not accept messages from scouts");
+    expect((await one("select status from athletes where id=$1", [id])).status).toBe("unreachable");
+    expect((await one("select status, last_error from messages where id=$1", [messageId]))).toMatchObject({ status: "failed" });
+  });
+});

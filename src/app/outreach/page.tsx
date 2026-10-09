@@ -1,16 +1,19 @@
-import { approveAction, cancelMessageAction, planNowAction, saveDraftAction } from "../actions";
+import { approveAction, cancelMessageAction, cannotMessageAction, confirmSentAction, planNowAction, platformLimitAction, saveDraftAction } from "../actions";
+import { CopyButton } from "@/components/copy-button";
 import { Flash } from "@/components/flash";
 import { ModeBanner } from "@/components/mode-banner";
 import { Badge, btn, Card, fmtDate, input, PageHeader, StatusBadge, Table } from "@/components/ui";
 import { getDb } from "@/lib/db";
+import { getVolleyboxMode } from "@/lib/env";
 import { getSettings } from "@/lib/settings";
 import { isPotentialMinor } from "@/modules/messaging/safeguards";
 
 export const dynamic = "force-dynamic";
-const TABS = [["pending_approval", "Awaiting approval"], ["approved", "Approved / scheduled"], ["sent", "Sent"], ["failed", "Failed"], ["cancelled", "Cancelled"]] as const;
+const TABS = [["pending_approval", "Awaiting approval"], ["approved", "Ready to send"], ["sent", "Sent"], ["failed", "Failed"], ["cancelled", "Cancelled"]] as const;
 
 export default async function OutreachPage({ searchParams }: { searchParams: Promise<{ tab?: string; ok?: string; error?: string }> }) {
   const sp = await searchParams;
+  const assisted = getVolleyboxMode().mode === "assisted";
   const tab = TABS.some(([t]) => t === sp.tab) ? sp.tab! : "pending_approval";
   const db = getDb();
   const s = await getSettings(db);
@@ -27,21 +30,37 @@ export default async function OutreachPage({ searchParams }: { searchParams: Pro
 
   return (
     <>
-      <PageHeader title="Outreach queue" description="Drafts are generated automatically. Adults can be auto-approved in Settings; anyone who may be under 18 always needs your approval.">
+      <PageHeader title="Outreach queue" description="Drafts are generated automatically. Approve them, then send each one on Volleybox and confirm here. Anyone who may be under 18 always needs your explicit approval.">
         <form action={planNowAction}><input type="hidden" name="returnTo" value={here} /><button className={btn.secondary}>Generate drafts now</button></form>
       </PageHeader>
       <Flash ok={sp.ok} error={sp.error} />
       <ModeBanner settings={s} returnTo={here} />
       <Card className="mb-4">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
-          <span>Sending: <strong>{s.outreach_enabled ? "on" : "off"}</strong></span>
-          <span>Last 24h: <strong>{sent24}/{s.daily_cap}</strong></span>
-          <span>Window: <strong>{s.window_start_hour}:00-{s.window_end_hour}:00 {s.timezone}</strong></span>
-          <span>Min gap: <strong>{s.min_interval_seconds}s</strong></span>
+          {!assisted && <span>Auto-sending: <strong>{s.outreach_enabled ? "on" : "off"}</strong></span>}
+          <span>Sent in last 24h: <strong>{sent24}/{s.daily_cap}</strong></span>
+          {!assisted && <span>Window: <strong>{s.window_start_hour}:00-{s.window_end_hour}:00 {s.timezone}</strong></span>}
+          <span>Min gap between messages: <strong>{s.min_interval_seconds}s</strong></span>
           <span>Auto-approve adults: <strong>{s.auto_approve_adults ? "yes" : "no"}</strong></span>
           <a className="underline" href="/settings">Change schedule</a>
         </div>
       </Card>
+
+      {assisted && tab === "approved" && (
+        <Card title="How sending works" className="mb-4">
+          <ol className="list-decimal space-y-1 pl-5 text-sm text-slate-700">
+            <li>Click <strong>Open profile</strong> and use Volleybox&apos;s own message button (you must be signed in to your Volleybox account).</li>
+            <li>Click <strong>Copy message</strong>, paste it, and send it yourself.</li>
+            <li>Come back and click <strong>I sent it</strong>. The app records it, enforces your daily cap and gap, and starts the follow-up timer.</li>
+          </ol>
+          <p className="mt-2 text-xs text-slate-500">If Volleybox shows a CAPTCHA, a sending limit or restricts your account, stop and report it below: the app pauses everything. It never works around those controls. If an athlete does not accept messages from you, use &quot;Can&apos;t message&quot;.</p>
+          <form action={platformLimitAction} className="mt-3 flex flex-wrap gap-2">
+            <input type="hidden" name="returnTo" value={here} />
+            <input name="note" placeholder="What did Volleybox show? (optional)" className={`${input} max-w-sm`} />
+            <button className={`${btn.danger} ${btn.small}`}>Volleybox limited me: pause sending</button>
+          </form>
+        </Card>
+      )}
 
       <div className="mb-3 flex flex-wrap gap-1">
         {TABS.map(([t, label]) => (
@@ -82,13 +101,21 @@ export default async function OutreachPage({ searchParams }: { searchParams: Pro
             <td className="w-44 px-3 py-2 text-xs text-slate-600">
               <div className="flex flex-wrap gap-1"><Badge>{m.kind}</Badge><Badge>{m.language}</Badge><StatusBadge status={m.status} /></div>
               {m.sent_at && <div className="mt-1">Sent {fmtDate(m.sent_at)}</div>}
-              {m.status === "approved" && <div className="mt-1">Due {fmtDate(m.send_after)}</div>}
+              {m.status === "approved" && !assisted && <div className="mt-1">Due {fmtDate(m.send_after)}</div>}
               {m.attempts > 0 && <div className="mt-1">Attempts: {m.attempts}/{m.max_attempts}</div>}
             </td>
             <td className="w-40 px-3 py-2">
               <div className="flex flex-col gap-1">
                 {m.status === "pending_approval" && (
                   <form action={approveAction}><input type="hidden" name="ids" value={m.id} /><input type="hidden" name="returnTo" value={here} /><button className={`${btn.primary} ${btn.small} w-full`}>Approve</button></form>
+                )}
+                {assisted && m.status === "approved" && (
+                  <>
+                    <a className={`${btn.secondary} ${btn.small} w-full`} href={m.profile_url} target="_blank" rel="noreferrer">Open profile</a>
+                    <CopyButton text={m.body} />
+                    <form action={confirmSentAction}><input type="hidden" name="id" value={m.id} /><input type="hidden" name="returnTo" value={here} /><button className={`${btn.primary} ${btn.small} w-full`}>I sent it</button></form>
+                    <form action={cannotMessageAction}><input type="hidden" name="id" value={m.id} /><input type="hidden" name="returnTo" value={here} /><input type="hidden" name="reason" value="Volleybox does not allow messaging this athlete." /><button className={`${btn.secondary} ${btn.small} w-full`}>Can&apos;t message</button></form>
+                  </>
                 )}
                 {["pending_approval", "approved"].includes(m.status) && (
                   <form action={cancelMessageAction}><input type="hidden" name="id" value={m.id} /><input type="hidden" name="returnTo" value={here} /><button className={`${btn.danger} ${btn.small} w-full`}>Cancel</button></form>

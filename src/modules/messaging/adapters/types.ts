@@ -35,8 +35,10 @@ export class TransientSendError extends Error {}
 
 export interface MessagingAdapter {
   id: string;
-  /** false for the mock adapter: nothing is delivered to Volleybox. */
+  /** true only for a real, authorized programmatic channel. No such channel exists today. */
   live: boolean;
+  /** true when a human performs the send and confirms it in the app. */
+  manual?: boolean;
   send(msg: OutboundMessage): Promise<SendResult>;
   fetchReplies(cursor: string | null): Promise<{ messages: InboundMessage[]; cursor: string | null }>;
   conversationUrl(threadId: string | null, profileUrl: string): string;

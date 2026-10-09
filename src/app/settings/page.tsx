@@ -4,6 +4,7 @@ import { ModeBanner } from "@/components/mode-banner";
 import { btn, Card, CheckGroup, Field, input, PageHeader } from "@/components/ui";
 import { LANGUAGE_LABEL, LANGUAGES } from "@/lib/countries";
 import { getDb } from "@/lib/db";
+import { getVolleyboxMode } from "@/lib/env";
 import { getSettings } from "@/lib/settings";
 import { renderMessage } from "@/modules/messaging/templates";
 
@@ -13,6 +14,7 @@ const DAYS = [[1, "Mon"], [2, "Tue"], [3, "Wed"], [4, "Thu"], [5, "Fri"], [6, "S
 export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ ok?: string; error?: string }> }) {
   const sp = await searchParams;
   const s = await getSettings(getDb());
+  const assisted = getVolleyboxMode().mode === "assisted";
   const num = (name: string, label: string, value: number, hint?: string, min = 0) => (
     <Field label={label} hint={hint}><input name={name} type="number" min={min} defaultValue={value} className={input} /></Field>
   );
@@ -33,7 +35,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         </Card>
         <Card title="Automation">
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="outreach_enabled" defaultChecked={s.outreach_enabled} /> <strong>Send automatically</strong> (approved messages go out on the schedule below)</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="outreach_enabled" defaultChecked={s.outreach_enabled} /> <strong>Send automatically</strong> {assisted ? "(demo mode only; in assisted mode you send each message yourself)" : "(approved messages go out on the schedule below)"}</label>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="auto_approve_adults" defaultChecked={s.auto_approve_adults} /> Auto-approve drafts for athletes confirmed to be 18+ (minors always need your approval)</label>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="followups_enabled" defaultChecked={s.followups_enabled} /> Send a polite follow-up if there is no reply (stops as soon as the athlete replies or declines)</label>
           </div>
@@ -48,7 +50,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
             {num("plan_backlog_cap", "Max drafts waiting at once", s.plan_backlog_cap)}
             <div className="md:col-span-2"><Field label="Sending days"><CheckGroup name="send_days" options={DAYS.map(([v, l]) => ({ value: v, label: l }))} selected={s.send_days} /></Field></div>
           </div>
-          <p className="mt-3 text-xs text-slate-500">If Volleybox returns a rate limit, CAPTCHA, or account restriction, sending pauses automatically and you are alerted. The app never tries to work around it.</p>
+          <p className="mt-3 text-xs text-slate-500">{assisted ? "The daily cap and minimum gap are enforced when you confirm a send; the window and days apply to automatic sending only. " : ""}If Volleybox shows a rate limit, CAPTCHA, or account restriction, report it and sending pauses. The app never tries to work around it.</p>
         </Card>
         <Card title="Follow-ups and safeguards">
           <div className="grid gap-4 md:grid-cols-4">

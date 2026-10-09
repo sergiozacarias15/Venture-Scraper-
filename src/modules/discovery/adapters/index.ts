@@ -1,8 +1,8 @@
 import { getVolleyboxMode } from "@/lib/env";
 import type { DiscoveryAdapter } from "../types";
-import { HttpDiscoveryAdapter } from "./http";
 import { MockDiscoveryAdapter } from "./mock";
 
-export function getDiscoveryAdapter(): DiscoveryAdapter {
-  return getVolleyboxMode().mode === "live" ? new HttpDiscoveryAdapter() : new MockDiscoveryAdapter();
+/** null in assisted mode: there is no authorized automated source of Volleybox profiles. */
+export function getDiscoveryAdapter(): DiscoveryAdapter | null {
+  return getVolleyboxMode().mode === "demo" ? new MockDiscoveryAdapter() : null;
 }

@@ -1,9 +1,6 @@
 import type { InboundMessage, MessagingAdapter, OutboundMessage, SendResult } from "./types";
 
-/**
- * Offline stand-in for the Volleybox messaging integration. It "delivers" nothing; it records
- * what would have been sent so the whole queue can be exercised end to end.
- */
+/** Demo/test channel. "Delivers" nothing; records what would have been sent so the queue can be exercised. */
 export class MockMessagingAdapter implements MessagingAdapter {
   id = "mock";
   live = false;

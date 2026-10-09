@@ -53,10 +53,15 @@ describe("job queue", () => {
 
 describe("scheduler", () => {
   it("enqueues recurring jobs once per bucket and only runs discovery when enabled", async () => {
-    expect(await scheduleRecurring(db, NOW)).not.toContain("discovery.run");
-    expect(await scheduleRecurring(db, NOW)).toEqual([]);
+    expect(await scheduleRecurring(db, NOW, { discovery: true })).not.toContain("discovery.run");
+    expect(await scheduleRecurring(db, NOW, { discovery: true })).toEqual([]);
     await updateSettings(db, { discovery_enabled: true });
-    expect(await scheduleRecurring(db, NOW)).toContain("discovery.run");
+    expect(await scheduleRecurring(db, NOW, { discovery: true })).toContain("discovery.run");
+  });
+
+  it("never schedules discovery when no authorized source exists (assisted mode)", async () => {
+    await updateSettings(db, { discovery_enabled: true });
+    expect(await scheduleRecurring(db, NOW, { discovery: false })).not.toContain("discovery.run");
   });
 
   it("runs the full pipeline: discover -> plan -> send -> reply", async () => {

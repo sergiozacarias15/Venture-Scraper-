@@ -15,12 +15,12 @@ export const RECURRING: Recurring[] = [
 ];
 
 /** Enqueues each recurring job once per time bucket (dedupe key), so overlapping ticks are harmless. */
-export async function scheduleRecurring(db: Db, now = new Date()) {
+export async function scheduleRecurring(db: Db, now = new Date(), opts: { discovery?: boolean } = {}) {
   const s = await getSettings(db);
   const queued: string[] = [];
   for (const r of RECURRING) {
     const every = r.everyMinutes(s);
-    if (!every) continue;
+    if (!every || (r.type === "discovery.run" && !opts.discovery)) continue;
     const bucket = Math.floor(now.getTime() / (every * 60_000));
     const id = await enqueueJob(db, r.type, { dedupeKey: `${r.type}:${bucket}`, runAt: now });
     if (id) queued.push(r.type);
@@ -51,7 +51,7 @@ export async function runDueJobs(db: Db, deps: Deps, opts: { now?: Date; limit?:
 }
 
 export async function tick(db: Db, deps: Deps, now = new Date()) {
-  const scheduled = await scheduleRecurring(db, now);
+  const scheduled = await scheduleRecurring(db, now, { discovery: !!deps.discovery });
   const run = await runDueJobs(db, deps, { now });
   return { scheduled, ...run };
 }

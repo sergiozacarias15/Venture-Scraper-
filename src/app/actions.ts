@@ -14,7 +14,8 @@ import { parseAthleteCsv } from "@/modules/discovery/adapters/csv";
 import { ingestAthletes } from "@/modules/discovery/service";
 import { markMovedOffPlatform, recordGuardianConsent, updateLead, type LeadStatus } from "@/modules/leads/service";
 import {
-  approveMessages, cancelMessage, planFollowups, planIntros, restoreAthlete, resumeSending, updateDraftBody,
+  approveMessages, cancelMessage, confirmManualSend, planFollowups, planIntros, reportCannotMessage, reportPlatformLimit,
+  restoreAthlete, resumeSending, updateDraftBody,
 } from "@/modules/messaging/service";
 import { liftSuppression, suppressAthlete, suppressProfileUrl } from "@/modules/messaging/suppression";
 import { normalizeProfileUrl } from "@/modules/discovery/normalize";
@@ -93,6 +94,7 @@ export async function saveDiscoverySettings(form: FormData) {
 export async function runDiscoveryNow() {
   await run("/discovery", async () => {
     const db = getDb();
+    if (!defaultDeps().discovery) throw new Error("No automated discovery source is available. Import athletes from CSV instead.");
     await enqueueJob(db, "discovery.run", { maxAttempts: 2 });
     const r = await runDueJobs(db, defaultDeps(), { limit: 5 });
     return `Discovery job ran (${r.succeeded} succeeded, ${r.retried + r.dead} failed). See the runs table below.`;
@@ -165,6 +167,27 @@ export async function runJobsNowAction(form: FormData) {
   await run(returnPath(form, "/"), async () => {
     const r = await tick(getDb(), defaultDeps());
     return `Ran ${r.ran} job(s): ${r.succeeded} succeeded, ${r.retried} will retry, ${r.dead} failed.`;
+  });
+}
+
+export async function confirmSentAction(form: FormData) {
+  await run(returnPath(form, "/outreach?tab=approved"), async () => {
+    await confirmManualSend(getDb(), str(form, "id"));
+    return "Recorded as sent.";
+  });
+}
+
+export async function cannotMessageAction(form: FormData) {
+  await run(returnPath(form, "/outreach?tab=approved"), async () => {
+    await reportCannotMessage(getDb(), str(form, "id"), str(form, "reason"));
+    return "Marked as not messageable on Volleybox.";
+  });
+}
+
+export async function platformLimitAction(form: FormData) {
+  await run(returnPath(form, "/outreach?tab=approved"), async () => {
+    await reportPlatformLimit(getDb(), str(form, "note"));
+    return "Sending paused for 24 hours. Resolve the limit on Volleybox before resuming.";
   });
 }
 
