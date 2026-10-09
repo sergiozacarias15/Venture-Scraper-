@@ -8,8 +8,9 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "worker": "tsx scripts/worker.ts",
-    "db:migrate": "tsx scripts/migrate.ts"
+    "worker": "tsx --env-file-if-exists=.env.local scripts/worker.ts",
+    "db:migrate": "tsx --env-file-if-exists=.env.local scripts/migrate.ts",
+    "dev:db": "tsx scripts/dev-db.ts"
   },
   "dependencies": {
     "next": "^15.5.27",
@@ -21,6 +22,7 @@
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.8",
+    "@electric-sql/pglite-socket": "^0.2.11",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^22.20.5",
     "@types/papaparse": "^5.5.2",

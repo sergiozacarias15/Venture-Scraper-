@@ -8,7 +8,7 @@ export type VolleyboxMode = {
  * Live mode requires explicit opt-in AND credentials for an authorized Volleybox
  * integration. Anything else falls back to the mock adapters, which never contact Volleybox.
  */
-export function getVolleyboxMode(env: NodeJS.ProcessEnv = process.env): VolleyboxMode {
+export function getVolleyboxMode(env: Record<string, string | undefined> = process.env): VolleyboxMode {
   if (env.VOLLEYBOX_MODE !== "live") {
     return { mode: "mock", reason: "VOLLEYBOX_MODE is not set to \"live\"." };
   }
