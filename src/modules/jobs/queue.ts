@@ -5,6 +5,7 @@ import { addMinutes } from "@/lib/time";
 
 export type JobRow = {
   id: string; type: string; payload: Record<string, unknown>; attempts: number; max_attempts: number;
+  run_at: Date; created_at: Date;
 };
 
 export async function enqueueJob(
@@ -23,10 +24,10 @@ export async function enqueueJob(
 export async function claimJobs(db: Db, workerId: string, now: Date, limit: number): Promise<JobRow[]> {
   return db.query<JobRow>(
     `update jobs set status = 'running', locked_at = $2, locked_by = $1, attempts = attempts + 1
-     where id in (select id from jobs where status = 'queued' and run_at <= $2 order by run_at for update skip locked limit $3)
-     returning id, type, payload, attempts, max_attempts`,
+     where id in (select id from jobs where status = 'queued' and run_at <= $2 order by run_at, created_at for update skip locked limit $3)
+     returning id, type, payload, attempts, max_attempts, run_at, created_at`,
     [workerId, now, limit],
-  );
+  ).then((rows) => rows.sort((a, b) => +a.run_at - +b.run_at || +a.created_at - +b.created_at));
 }
 
 export async function completeJob(db: Db, id: string, result: unknown, now = new Date()) {

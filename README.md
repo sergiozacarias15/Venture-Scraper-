@@ -59,6 +59,37 @@ Walkthrough: **Settings** (set your sender name) -> **Discovery** (pick years/co
    Alternatives: `npm run worker` on any VM, or a Supabase `pg_cron` + `pg_net` call to the same endpoint.
 4. Sign in with `ADMIN_PASSWORD`. The dashboard fails closed in production if it is unset.
 
+## Working today vs. not connected
+
+| Capability | Status |
+|---|---|
+| Athlete database, filters, dedupe, CSV import | **Working** |
+| Message drafting (EN/IT/ES/PT), minor safeguards, approval, edit | **Working** |
+| Queue: schedule window, caps, min gap, retries, duplicate + suppression checks | **Working** |
+| Reply classification, suppression/opt-outs, follow-up stop, alerts, leads, off-platform tracking | **Working** |
+| Background jobs, event log, signed webhook endpoint | **Working** |
+| Discovery search on Volleybox | **Mock only** (synthetic athletes) until live access is activated |
+| Sending messages through Volleybox | **Mock only** (recorded locally, nothing delivered) |
+| Receiving replies from Volleybox | **Mock / manual** until Volleybox pushes to the webhook or polling is implemented |
+| Pipedrive sync | **Not connected** (columns + mapper only) |
+| Instagram / WhatsApp | **Not connected by design** (you continue personally; the app records that you moved) |
+| Browser automation of Volleybox, AI scouting, automatic sales conversations | **Not built** |
+
+The same table, evaluated against the running configuration, is at `/integrations` in the dashboard.
+
+## Exactly what is required to activate live discovery and messaging
+
+1. **Written authorization from Volleybox** for programmatic search and messaging (API / data-partner access). The app cannot check this; do not enable live mode without it.
+2. **Credentials**: `VOLLEYBOX_API_BASE_URL` and `VOLLEYBOX_API_KEY`, then `VOLLEYBOX_MODE=live`. All three are required; otherwise the app stays on mock adapters.
+3. **Match the adapters to Volleybox's real API.** Edit `src/modules/discovery/adapters/http.ts` (search endpoint, filters, response fields) and `src/modules/messaging/adapters/http.ts` (send endpoint, idempotency, inbound fetch, error codes). The current shapes are placeholders. Keep the mapping: rate limit -> `SendBlockedError("rate_limited")`, CAPTCHA -> `"captcha"`, restricted account -> `"account_restricted"`, 5xx/network -> `TransientSendError`, undeliverable recipient -> `PermanentSendError`. Update `tests/http-adapters.test.ts`.
+4. **Replies** (pick one): Volleybox pushes to `POST /api/webhooks/volleybox` signed with HMAC-SHA256 (`x-signature`, secret `VOLLEYBOX_WEBHOOK_SECRET`); or implement polling in `fetchReplies`; or keep logging replies manually.
+5. **Limits**: in Settings, set the daily cap, minimum gap and sending window at or below what Volleybox permits, and keep "Auto-approve adults" off until you have reviewed a batch of drafts.
+6. **Jobs running**: `CRON_SECRET` + Vercel Cron (`vercel.json`), or `npm run worker`.
+7. **Database**: apply `supabase/migrations`, set `SUPABASE_DB_URL`, `ADMIN_PASSWORD`.
+8. Start with a small test batch: run discovery, review drafts, approve a few, confirm delivery in Volleybox, then raise limits.
+
+If Volleybox refuses programmatic access, the app is still useful: import authorized CSV exports, generate and review drafts, copy them to Volleybox yourself, and log replies for classification, suppression and lead tracking.
+
 ## Connecting a real Volleybox integration
 
 Live mode needs **all** of: `VOLLEYBOX_MODE=live`, `VOLLEYBOX_API_BASE_URL`, `VOLLEYBOX_API_KEY`. Until then the app stays in mock mode.

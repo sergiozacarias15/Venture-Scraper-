@@ -10,6 +10,7 @@ const LINKS = [
   ["/inbox", "Inbox"],
   ["/leads", "Leads"],
   ["/suppressions", "Suppression list"],
+  ["/integrations", "Integrations"],
   ["/settings", "Settings"],
   ["/logs", "Logs & jobs"],
 ] as const;

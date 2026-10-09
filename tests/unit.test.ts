@@ -157,3 +157,19 @@ describe("volleybox mode", () => {
     expect(getVolleyboxMode({ VOLLEYBOX_MODE: "live", VOLLEYBOX_API_BASE_URL: "https://x", VOLLEYBOX_API_KEY: "k" }).mode).toBe("live");
   });
 });
+
+import { capabilities, liveActivationChecklist } from "@/lib/integrations";
+describe("integration status", () => {
+  it("reports mock sending until live is fully configured", () => {
+    const send = (env: Record<string, string>) => capabilities(env).find((c) => c.name.startsWith("Sending"))!.state;
+    expect(send({})).toBe("mock");
+    expect(send({ VOLLEYBOX_MODE: "live", VOLLEYBOX_API_BASE_URL: "https://x", VOLLEYBOX_API_KEY: "k" })).toBe("working");
+    expect(capabilities({}).find((c) => c.name.startsWith("Pipedrive"))!.state).toBe("not_connected");
+  });
+  it("always leaves the human-confirmed items unticked", () => {
+    const checks = liveActivationChecklist({ VOLLEYBOX_MODE: "live", VOLLEYBOX_API_BASE_URL: "https://x", VOLLEYBOX_API_KEY: "k", CRON_SECRET: "c" });
+    expect(checks.find((c) => c.key === "authorization")!.ok).toBe(false);
+    expect(checks.find((c) => c.key === "contract")!.ok).toBe(false);
+    expect(checks.find((c) => c.key === "mode")!.ok).toBe(true);
+  });
+});
