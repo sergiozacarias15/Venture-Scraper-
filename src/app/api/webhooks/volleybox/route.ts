@@ -23,7 +23,13 @@ export async function POST(req: Request) {
   if (!(await verifyHmacSignature(secret, raw, req.headers.get("x-signature")))) {
     return NextResponse.json({ error: "invalid signature" }, { status: 401 });
   }
-  const parsed = payload.safeParse(JSON.parse(raw));
+  let json: unknown;
+  try {
+    json = JSON.parse(raw);
+  } catch {
+    return NextResponse.json({ error: "invalid json" }, { status: 400 });
+  }
+  const parsed = payload.safeParse(json);
   if (!parsed.success) return NextResponse.json({ error: "invalid payload" }, { status: 400 });
   const p = parsed.data;
   const adapterId = getVolleyboxMode().mode === "live" ? "volleybox-api" : "mock";
